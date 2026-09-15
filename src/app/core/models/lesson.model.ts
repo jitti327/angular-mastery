@@ -8,6 +8,7 @@ export interface Lesson {
   topics: Topic[];
   prerequisites?: string[];
   objectives: string[];
+  quiz?: QuizQuestion[];
 }
 
 export interface Topic {

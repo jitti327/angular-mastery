@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LessonService } from '../../../core/services/lesson.service';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { LessonService, LessonCategory } from '../../../core/services/lesson.service';
 import { ProgressService } from '../../../core/services/progress.service';
 
 @Component({
@@ -10,14 +10,34 @@ import { ProgressService } from '../../../core/services/progress.service';
   template: `
     <div class="lessons-container">
       <header class="lessons-header">
-        <h1>Angular Learning Path</h1>
-        <p>Master Angular from beginner to advanced with 10 comprehensive lessons</p>
+        <h1>{{ pageTitle() }}</h1>
+        <p>{{ pageDescription() }}</p>
+        <div class="category-tabs">
+          <button 
+            [class.active]="activeCategory() === 'angular'" 
+            (click)="setCategory('angular')"
+            class="category-tab angular">
+            🅰️ Angular
+          </button>
+          <button 
+            [class.active]="activeCategory() === 'javascript'" 
+            (click)="setCategory('javascript')"
+            class="category-tab javascript">
+            📜 JavaScript
+          </button>
+          <button 
+            [class.active]="activeCategory() === 'typescript'" 
+            (click)="setCategory('typescript')"
+            class="category-tab typescript">
+            🔷 TypeScript
+          </button>
+        </div>
       </header>
 
       <div class="level-section">
         <h2 class="level-title beginner">🟢 Beginner Level</h2>
         <div class="lessons-grid">
-          @for (lesson of beginnerLessons; track lesson.id) {
+          @for (lesson of beginnerLessons(); track lesson.id) {
             <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
               <div class="lesson-number">{{ lesson.id }}</div>
               <div class="lesson-info">
@@ -39,7 +59,7 @@ import { ProgressService } from '../../../core/services/progress.service';
       <div class="level-section">
         <h2 class="level-title intermediate">🟠 Intermediate Level</h2>
         <div class="lessons-grid">
-          @for (lesson of intermediateLessons; track lesson.id) {
+          @for (lesson of intermediateLessons(); track lesson.id) {
             <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
               <div class="lesson-number">{{ lesson.id }}</div>
               <div class="lesson-info">
@@ -61,7 +81,7 @@ import { ProgressService } from '../../../core/services/progress.service';
       <div class="level-section">
         <h2 class="level-title advanced">🔴 Advanced Level</h2>
         <div class="lessons-grid">
-          @for (lesson of advancedLessons; track lesson.id) {
+          @for (lesson of advancedLessons(); track lesson.id) {
             <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
               <div class="lesson-number">{{ lesson.id }}</div>
               <div class="lesson-info">
@@ -99,7 +119,42 @@ import { ProgressService } from '../../../core/services/progress.service';
     .lessons-header p {
       font-size: 18px;
       color: #666;
-      margin: 0;
+      margin: 0 0 24px;
+    }
+    .category-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .category-tab {
+      padding: 12px 24px;
+      border: 2px solid #e0e0e0;
+      border-radius: 24px;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .category-tab:hover {
+      border-color: #dd0031;
+      color: #dd0031;
+    }
+    .category-tab.active.angular {
+      background: #dd0031;
+      border-color: #dd0031;
+      color: white;
+    }
+    .category-tab.active.javascript {
+      background: #f7df1e;
+      border-color: #f7df1e;
+      color: #1a1a1a;
+    }
+    .category-tab.active.typescript {
+      background: #3178c6;
+      border-color: #3178c6;
+      color: white;
     }
     .level-section {
       margin-bottom: 60px;
@@ -180,13 +235,55 @@ import { ProgressService } from '../../../core/services/progress.service';
       justify-content: center;
       font-weight: bold;
     }
+    :host-context(.dark-theme) {
+      .lessons-header h1, .lesson-info h3 { color: #fff; }
+      .lessons-header p { color: #aaa; }
+      .lesson-card { background: #2a2a2a; }
+      .level-title { border-bottom-color: #444; }
+      .category-tab { background: #333; border-color: #555; color: #fff; }
+    }
   `]
 })
-export class LessonsListComponent {
+export class LessonsListComponent implements OnInit {
   private lessonService = inject(LessonService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   progressService = inject(ProgressService);
 
-  beginnerLessons = this.lessonService.getLessonsByLevel('beginner');
-  intermediateLessons = this.lessonService.getLessonsByLevel('intermediate');
-  advancedLessons = this.lessonService.getLessonsByLevel('advanced');
+  activeCategory = signal<LessonCategory>('angular');
+
+  pageTitle = computed(() => {
+    const titles: Record<LessonCategory, string> = {
+      angular: 'Angular Learning Path',
+      javascript: 'JavaScript Mastery',
+      typescript: 'TypeScript Mastery'
+    };
+    return titles[this.activeCategory()];
+  });
+
+  pageDescription = computed(() => {
+    const descriptions: Record<LessonCategory, string> = {
+      angular: 'Master Angular from beginner to advanced with comprehensive lessons',
+      javascript: 'Master JavaScript from fundamentals to advanced patterns',
+      typescript: 'Master TypeScript from basics to type-level programming'
+    };
+    return descriptions[this.activeCategory()];
+  });
+
+  beginnerLessons = computed(() => this.lessonService.getLessonsByLevel('beginner', this.activeCategory()));
+  intermediateLessons = computed(() => this.lessonService.getLessonsByLevel('intermediate', this.activeCategory()));
+  advancedLessons = computed(() => this.lessonService.getLessonsByLevel('advanced', this.activeCategory()));
+
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      if (params['category'] && ['angular', 'javascript', 'typescript'].includes(params['category'])) {
+        this.activeCategory.set(params['category'] as LessonCategory);
+      }
+    });
+  }
+
+  setCategory(category: LessonCategory) {
+    this.activeCategory.set(category);
+    this.router.navigate(['/lessons', category]);
+  }
 }

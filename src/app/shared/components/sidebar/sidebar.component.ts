@@ -32,6 +32,18 @@ import { LessonService } from '../../../core/services/lesson.service';
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
             @if (!isCollapsed()) { <span>Home</span> }
           </a>
+          <a routerLink="/lessons/angular" routerLinkActive="active" class="nav-item">
+            <span class="nav-emoji">🅰️</span>
+            @if (!isCollapsed()) { <span>Angular Lessons</span> }
+          </a>
+          <a routerLink="/lessons/javascript" routerLinkActive="active" class="nav-item">
+            <span class="nav-emoji">📜</span>
+            @if (!isCollapsed()) { <span>JavaScript Lessons</span> }
+          </a>
+          <a routerLink="/lessons/typescript" routerLinkActive="active" class="nav-item">
+            <span class="nav-emoji">🔷</span>
+            @if (!isCollapsed()) { <span>TypeScript Lessons</span> }
+          </a>
           <a routerLink="/lessons" routerLinkActive="active" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             @if (!isCollapsed()) { <span>All Lessons</span> }

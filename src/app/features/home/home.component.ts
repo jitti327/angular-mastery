@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProgressTrackerComponent } from '../../shared/components/progress-tracker/progress-tracker.component';
+import { LessonService } from '../../core/services/lesson.service';
 
 @Component({
   selector: 'app-home',
@@ -10,10 +11,10 @@ import { ProgressTrackerComponent } from '../../shared/components/progress-track
     <div class="home-container">
       <section class="hero">
         <div class="hero-content">
-          <h1>Learn Angular <span class="highlight">Step by Step</span></h1>
+          <h1>Master <span class="highlight">Web Development</span></h1>
           <p class="hero-subtitle">
-            Master Angular 22 with interactive lessons, live code examples,
-            visual diagrams, and real-world practice projects.
+            Complete learning platform covering Angular, JavaScript, and TypeScript.
+            Interactive lessons, live code examples, visual diagrams, and real-world practice projects.
           </p>
           <div class="hero-actions">
             <a routerLink="/lessons" class="btn-primary">Start Learning →</a>
@@ -21,32 +22,67 @@ import { ProgressTrackerComponent } from '../../shared/components/progress-track
           </div>
           <div class="hero-stats">
             <div class="stat">
-              <span class="stat-number">42</span>
+              <span class="stat-number">{{ totalLessons() }}</span>
               <span class="stat-label">Lessons</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">3</span>
+              <span class="stat-label">Languages</span>
             </div>
             <div class="stat">
               <span class="stat-number">4</span>
               <span class="stat-label">Practice Projects</span>
             </div>
-            <div class="stat">
-              <span class="stat-number">22</span>
-              <span class="stat-label">Angular Version</span>
-            </div>
           </div>
         </div>
         <div class="hero-visual">
-          <div class="angular-logo">
-            <svg viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg">
-              <path fill="#DD0031" d="M125 30L31.9 63.2l14.2 123.1L125 230l78.9-43.7 14.2-123.1z"/>
-              <path fill="#C3002F" d="M125 30v22.2-.1V230l78.9-43.7 14.2-123.1L125 30z"/>
-              <path fill="#FFFFFF" d="M125 52.1L66.8 182.6h21.7l11.7-29.2h49.4l11.7 29.2H183L125 52.1zm17 83.3h-34l17-40.9 17 40.9z"/>
-            </svg>
+          <div class="language-logos">
+            <div class="logo-card angular">
+              <svg viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#DD0031" d="M125 30L31.9 63.2l14.2 123.1L125 230l78.9-43.7 14.2-123.1z"/>
+                <path fill="#C3002F" d="M125 30v22.2-.1V230l78.9-43.7 14.2-123.1L125 30z"/>
+                <path fill="#FFFFFF" d="M125 52.1L66.8 182.6h21.7l11.7-29.2h49.4l11.7 29.2H183L125 52.1zm17 83.3h-34l17-40.9 17 40.9z"/>
+              </svg>
+              <span>Angular</span>
+            </div>
+            <div class="logo-card javascript">
+              <span class="js-icon">JS</span>
+              <span>JavaScript</span>
+            </div>
+            <div class="logo-card typescript">
+              <span class="ts-icon">TS</span>
+              <span>TypeScript</span>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="progress-section">
-        <app-progress-tracker [totalLessons]="42" />
+        <app-progress-tracker [totalLessons]="totalLessons()" />
+      </section>
+
+      <section class="categories">
+        <h2>Choose Your Path</h2>
+        <div class="categories-grid">
+          <a routerLink="/lessons/angular" class="category-card angular">
+            <span class="category-icon">🅰️</span>
+            <h3>Angular</h3>
+            <p>Master Angular 22 with {{ angularCount() }} comprehensive lessons</p>
+            <span class="category-count">{{ angularCount() }} lessons</span>
+          </a>
+          <a routerLink="/lessons/javascript" class="category-card javascript">
+            <span class="category-icon">📜</span>
+            <h3>JavaScript</h3>
+            <p>Master JavaScript from fundamentals to advanced patterns</p>
+            <span class="category-count">{{ jsCount() }} lessons</span>
+          </a>
+          <a routerLink="/lessons/typescript" class="category-card typescript">
+            <span class="category-icon">🔷</span>
+            <h3>TypeScript</h3>
+            <p>Master TypeScript from basics to type-level programming</p>
+            <span class="category-count">{{ tsCount() }} lessons</span>
+          </a>
+        </div>
       </section>
 
       <section class="features">
@@ -215,26 +251,114 @@ import { ProgressTrackerComponent } from '../../shared/components/progress-track
       display: flex;
       justify-content: center;
     }
-    .angular-logo svg {
-      width: 300px;
-      height: 300px;
-      animation: pulse 2s ease-in-out infinite;
+    .language-logos {
+      display: flex;
+      gap: 24px;
+      align-items: center;
     }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    .logo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .logo-card:hover {
+      transform: translateY(-8px);
+    }
+    .logo-card.angular svg {
+      width: 80px;
+      height: 80px;
+    }
+    .js-icon, .ts-icon {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      border-radius: 16px;
+    }
+    .js-icon {
+      background: #f7df1e;
+      color: #1a1a1a;
+    }
+    .ts-icon {
+      background: #3178c6;
+      color: white;
+    }
+    .logo-card span:last-child {
+      font-weight: 600;
+      color: #1a1a1a;
     }
     .progress-section {
       margin: 40px 0;
     }
-    .features, .projects-preview, .angular-versions {
+    .categories, .features, .projects-preview, .angular-versions {
       margin: 80px 0;
     }
-    .features h2, .projects-preview h2, .angular-versions h2 {
+    .categories h2, .features h2, .projects-preview h2, .angular-versions h2 {
       text-align: center;
       font-size: 36px;
       margin-bottom: 48px;
       color: #1a1a1a;
+    }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .category-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 32px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-decoration: none;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid transparent;
+    }
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .category-card.angular:hover {
+      border-color: #dd0031;
+    }
+    .category-card.javascript:hover {
+      border-color: #f7df1e;
+    }
+    .category-card.typescript:hover {
+      border-color: #3178c6;
+    }
+    .category-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    .category-card h3 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      color: #1a1a1a;
+    }
+    .category-card p {
+      margin: 0 0 16px;
+      color: #666;
+    }
+    .category-count {
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
     }
     .features-grid {
       display: grid;
@@ -324,6 +448,21 @@ import { ProgressTrackerComponent } from '../../shared/components/progress-track
       font-size: 18px;
       margin-bottom: 24px;
     }
+    :host-context(.dark-theme) {
+      .hero-content h1, .category-card h3, .feature-card h3, .project-card h3, .categories h2, .features h2, .projects-preview h2, .angular-versions h2 { color: #fff; }
+      .hero-subtitle, .feature-card p, .project-card p { color: #aaa; }
+      .logo-card, .feature-card, .project-card, .category-card { background: #2a2a2a; }
+      .category-count { background: #444; color: #fff; }
+      .btn-secondary { background: #333; border-color: #555; color: #fff; }
+      .angular-versions { background: linear-gradient(135deg, #2a2a2a 0%, #333 100%); }
+    }
   `]
 })
-export class HomeComponent {}
+export class HomeComponent {
+  private lessonService = inject(LessonService);
+
+  totalLessons = () => this.lessonService.getLessonCount();
+  angularCount = () => this.lessonService.getLessonCountByCategory('angular');
+  jsCount = () => this.lessonService.getLessonCountByCategory('javascript');
+  tsCount = () => this.lessonService.getLessonCountByCategory('typescript');
+}

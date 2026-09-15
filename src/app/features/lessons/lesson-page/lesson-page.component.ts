@@ -42,7 +42,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
           <nav class="breadcrumb">
             <a routerLink="/">Home</a>
             <span class="breadcrumb-sep">/</span>
-            <a routerLink="/lessons">Lessons</a>
+            <a [routerLink]="['/lessons', lessonCategory()]">{{ categoryLabel() }} Lessons</a>
             <span class="breadcrumb-sep">/</span>
             <span class="breadcrumb-current">{{ lesson.title }}</span>
           </nav>
@@ -50,7 +50,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
           <header class="lesson-header">
             <div class="lesson-badges">
               <span class="lesson-level" [class]="'level-' + lesson.level">{{ lesson.level }}</span>
-              <span class="lesson-number">Lesson {{ lesson.id }} of {{ totalLessons() }}</span>
+              <span class="lesson-number">Lesson {{ lessonIndex() }} of {{ categoryLessonCount() }}</span>
             </div>
             <h1>{{ lesson.title }}</h1>
             <p class="lesson-description">{{ lesson.description }}</p>
@@ -120,10 +120,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
           </div>
 
           <footer class="lesson-footer">
-            @if (lesson.id > 1) {
-              <a [routerLink]="['/lesson', lesson.id - 1]" class="nav-btn prev">
+            @if (prevLesson(); as prev) {
+              <a [routerLink]="['/lesson', prev.id]" class="nav-btn prev">
                 <span class="nav-direction">Previous</span>
-                <span class="nav-title">Lesson {{ lesson.id - 1 }}</span>
+                <span class="nav-title">{{ prev.title }}</span>
               </a>
             } @else {
               <div></div>
@@ -137,10 +137,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
                 Mark Complete
               }
             </button>
-            @if (lesson.id < totalLessons()) {
-              <a [routerLink]="['/lesson', lesson.id + 1]" class="nav-btn next">
+            @if (nextLesson(); as next) {
+              <a [routerLink]="['/lesson', next.id]" class="nav-btn next">
                 <span class="nav-direction">Next</span>
-                <span class="nav-title">Lesson {{ lesson.id + 1 }}</span>
+                <span class="nav-title">{{ next.title }}</span>
               </a>
             } @else {
               <div></div>
@@ -428,6 +428,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
     .nav-title {
       font-size: 15px;
       font-weight: 600;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .complete-btn {
       display: flex;
@@ -489,7 +493,6 @@ export class LessonPageComponent {
 
   activeSection = signal('');
   readingProgress = signal(0);
-  totalLessons = signal(0);
 
   lesson = toSignal(
     this.route.paramMap.pipe(
@@ -500,49 +503,52 @@ export class LessonPageComponent {
     )
   );
 
+  lessonCategory = computed(() => {
+    const l = this.lesson();
+    return l ? this.lessonService.getLessonCategory(l.id) || 'angular' : 'angular';
+  });
+
+  categoryLabel = computed(() => {
+    const labels: Record<string, string> = {
+      angular: 'Angular',
+      javascript: 'JavaScript',
+      typescript: 'TypeScript'
+    };
+    return labels[this.lessonCategory()];
+  });
+
+  lessonIndex = computed(() => {
+    const l = this.lesson();
+    return l ? this.lessonService.getLessonIndexInCategory(l.id) : 0;
+  });
+
+  categoryLessonCount = computed(() => {
+    const l = this.lesson();
+    return l ? this.lessonService.getLessonCountInCategory(l.id) : 0;
+  });
+
+  prevLesson = computed(() => {
+    const l = this.lesson();
+    return l ? this.lessonService.getPrevLesson(l.id) : undefined;
+  });
+
+  nextLesson = computed(() => {
+    const l = this.lesson();
+    return l ? this.lessonService.getNextLesson(l.id) : undefined;
+  });
+
   isCompleted = computed(() => {
     const l = this.lesson();
     return l ? this.progressService.isLessonCompleted(l.id) : false;
   });
 
   quizQuestions = computed(() => {
-    return [
-      {
-        id: 1,
-        question: 'What is Angular?',
-        options: [
-          'A JavaScript library',
-          'A platform and framework for building single-page client applications',
-          'A CSS framework',
-          'A database management system'
-        ],
-        correctIndex: 1,
-        explanation: 'Angular is a complete platform and framework for building single-page client applications using HTML and TypeScript.'
-      },
-      {
-        id: 2,
-        question: 'What is the default change detection strategy in Angular 22?',
-        options: ['Default', 'CheckOnce', 'OnPush', 'Detached'],
-        correctIndex: 2,
-        explanation: 'In Angular 22, OnPush is the default change detection strategy, replacing the previous Default strategy.'
-      },
-      {
-        id: 3,
-        question: 'What is the purpose of Signals in Angular?',
-        options: [
-          'To handle HTTP requests',
-          'To manage routing',
-          'To provide reactive state management',
-          'To style components'
-        ],
-        correctIndex: 2,
-        explanation: 'Signals are Angular\'s reactive primitives that provide fine-grained reactivity and replace Zone.js for state management.'
-      }
-    ];
+    const l = this.lesson();
+    if (!l) return [];
+    return l.quiz || [];
   });
 
   constructor() {
-    this.totalLessons.set(this.lessonService.getLessonCount());
     if (typeof window !== 'undefined') {
       this.updateReadingProgress();
     }

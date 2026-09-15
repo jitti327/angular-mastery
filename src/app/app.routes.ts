@@ -12,6 +12,7 @@ import { VisualsDashboardComponent } from './features/visuals/visuals-dashboard.
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'lessons', component: LessonsListComponent },
+  { path: 'lessons/:category', component: LessonsListComponent },
   { path: 'lesson/:id', component: LessonPageComponent },
   { path: 'practice/todo', component: TodoProjectComponent },
   { path: 'practice/weather', component: WeatherProjectComponent },
