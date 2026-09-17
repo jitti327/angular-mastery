@@ -1,4 +1,5 @@
 /* Global Styles for Angular Mastery */
+@import 'prismjs/themes/prism-tomorrow.css';
 
 /* CSS Variables - Light Theme */
 :root {
@@ -145,6 +146,46 @@ button {
   100% { background-position: 200% 0; }
 }
 
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(221, 0, 49, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(221, 0, 49, 0.4); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-5px); }
+  75% { transform: translateY(5px); }
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Utility classes */
 .fade-in {
   animation: fadeIn 0.3s ease-out;
@@ -169,6 +210,150 @@ button {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
+}
+
+/* Print / PDF styles */
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  .lesson-sidebar,
+  .toc-header,
+  .toc-nav,
+  .lesson-progress,
+  .lesson-footer,
+  .lesson-quiz,
+  .lesson-objectives,
+  .complete-btn,
+  .nav-btn,
+  .print-btn,
+  app-quiz,
+  .back-btn,
+  header,
+  .app-header {
+    display: none !important;
+  }
+
+  .breadcrumb {
+    display: flex !important;
+    margin-bottom: 16px;
+    font-size: 10pt;
+  }
+
+  .lesson-header {
+    margin-bottom: 24px;
+    page-break-after: avoid;
+  }
+
+  .lesson-header h1 {
+    font-size: 24pt;
+    color: #000 !important;
+  }
+
+  .lesson-description {
+    color: #333 !important;
+    font-size: 11pt;
+  }
+
+  .lesson-meta .meta-item {
+    color: #333 !important;
+  }
+
+  .lesson-level {
+    border: 1px solid #999;
+    padding: 2px 8px;
+  }
+
+  .lesson-content {
+    font-size: 11pt;
+  }
+
+  .topic-section {
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+  }
+
+  .topic-header h2 {
+    color: #000 !important;
+    font-size: 16pt;
+  }
+
+  .topic-number {
+    background: #333 !important;
+    color: #fff !important;
+  }
+
+  .topic-content {
+    color: #333 !important;
+  }
+
+  .topic-content strong {
+    color: #000 !important;
+  }
+
+  .topic-content code {
+    background: #f0f0f0 !important;
+    border: 1px solid #ccc;
+    padding: 1px 4px;
+    font-size: 10pt;
+  }
+
+  .topic-content pre {
+    background: #f5f5f5 !important;
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+    padding: 12px;
+    font-size: 9pt;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .topic-content pre code {
+    background: transparent !important;
+    border: none;
+    padding: 0;
+    color: #000 !important;
+  }
+
+  a[href]::after {
+    content: none;
+  }
+
+  h1, h2, h3, h4, h5 {
+    page-break-after: avoid;
+    color: #000 !important;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  table {
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+  }
+
+  th {
+    background: #eee !important;
+  }
 }
 
 /* Responsive */

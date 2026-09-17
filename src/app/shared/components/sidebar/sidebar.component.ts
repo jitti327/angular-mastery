@@ -1,18 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SearchService } from '../../../core/services/search.service';
 import { ProgressService } from '../../../core/services/progress.service';
 import { LessonService } from '../../../core/services/lesson.service';
+import { MobileMenuService } from '../../../core/services/mobile-menu.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <aside class="sidebar" [class.collapsed]="isCollapsed()">
+    <aside class="sidebar" [class.collapsed]="isCollapsed()" [class.mobile-open]="mobileMenuService.isOpen()">
       <div class="sidebar-header">
-        <a routerLink="/" class="brand">
+        <a routerLink="/" class="brand" (click)="closeMobileMenu()">
           <span class="brand-icon">🅰️</span>
           @if (!isCollapsed()) {
             <span class="brand-text">Angular Mastery</span>
@@ -27,32 +28,107 @@ import { LessonService } from '../../../core/services/lesson.service';
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <span class="nav-label">LEARNING</span>
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeMobileMenu()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
             @if (!isCollapsed()) { <span>Home</span> }
           </a>
-          <a routerLink="/lessons/angular" routerLinkActive="active" class="nav-item">
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-label">FRAMEWORKS</span>
+          <a routerLink="/lessons/angular" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">🅰️</span>
-            @if (!isCollapsed()) { <span>Angular Lessons</span> }
+            @if (!isCollapsed()) { <span>Angular</span> }
           </a>
-          <a routerLink="/lessons/javascript" routerLinkActive="active" class="nav-item">
+          <a routerLink="/lessons/javascript" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">📜</span>
-            @if (!isCollapsed()) { <span>JavaScript Lessons</span> }
+            @if (!isCollapsed()) { <span>JavaScript</span> }
           </a>
-          <a routerLink="/lessons/typescript" routerLinkActive="active" class="nav-item">
+          <a routerLink="/lessons/typescript" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">🔷</span>
-            @if (!isCollapsed()) { <span>TypeScript Lessons</span> }
+            @if (!isCollapsed()) { <span>TypeScript</span> }
           </a>
-          <a routerLink="/lessons" routerLinkActive="active" class="nav-item">
+          <a routerLink="/lessons/react" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">⚛️</span>
+            @if (!isCollapsed()) { <span>React</span> }
+          </a>
+          <a routerLink="/lessons/vue" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">💚</span>
+            @if (!isCollapsed()) { <span>Vue</span> }
+          </a>
+          <a routerLink="/lessons/html-css" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🎨</span>
+            @if (!isCollapsed()) { <span>HTML & CSS</span> }
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-label">SENIOR ENGINEER</span>
+          <a routerLink="/lessons/system-design" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🏗️</span>
+            @if (!isCollapsed()) { <span>System Design</span> }
+          </a>
+          <a routerLink="/lessons/database" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🗄️</span>
+            @if (!isCollapsed()) { <span>Databases</span> }
+          </a>
+          <a routerLink="/lessons/networking" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🌐</span>
+            @if (!isCollapsed()) { <span>Networking & APIs</span> }
+          </a>
+          <a routerLink="/lessons/browser" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🌍</span>
+            @if (!isCollapsed()) { <span>Browser Internals</span> }
+          </a>
+          <a routerLink="/lessons/design-systems" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🎯</span>
+            @if (!isCollapsed()) { <span>Design Systems</span> }
+          </a>
+          <a routerLink="/lessons/dsa-frontend" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🧮</span>
+            @if (!isCollapsed()) { <span>DSA for Frontend</span> }
+          </a>
+          <a routerLink="/lessons/soft-skills" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🤝</span>
+            @if (!isCollapsed()) { <span>Soft Skills</span> }
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-label">TOOLING & QUALITY</span>
+          <a routerLink="/lessons/performance" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">⚡</span>
+            @if (!isCollapsed()) { <span>Performance</span> }
+          </a>
+          <a routerLink="/lessons/testing" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🧪</span>
+            @if (!isCollapsed()) { <span>Testing</span> }
+          </a>
+          <a routerLink="/lessons/tooling" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🔧</span>
+            @if (!isCollapsed()) { <span>Tooling & DevOps</span> }
+          </a>
+          <a routerLink="/lessons" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             @if (!isCollapsed()) { <span>All Lessons</span> }
           </a>
-          <a routerLink="/version-comparison" routerLinkActive="active" class="nav-item">
+          <a routerLink="/lessons/security" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🔒</span>
+            @if (!isCollapsed()) { <span>Security</span> }
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-label">RESOURCES</span>
+          <a routerLink="/knowledge-base" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            @if (!isCollapsed()) { <span>Knowledge Base</span> }
+          </a>
+          <a routerLink="/version-comparison" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
             @if (!isCollapsed()) { <span>Version Comparison</span> }
           </a>
-          <a routerLink="/visuals" routerLinkActive="active" class="nav-item">
+          <a routerLink="/visuals" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
             @if (!isCollapsed()) { <span>Visual Learning</span> }
           </a>
@@ -60,19 +136,19 @@ import { LessonService } from '../../../core/services/lesson.service';
 
         <div class="nav-section">
           <span class="nav-label">PRACTICE PROJECTS</span>
-          <a routerLink="/practice/todo" routerLinkActive="active" class="nav-item">
+          <a routerLink="/practice/todo" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">✅</span>
             @if (!isCollapsed()) { <span>Todo App</span> }
           </a>
-          <a routerLink="/practice/weather" routerLinkActive="active" class="nav-item">
+          <a routerLink="/practice/weather" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">🌤️</span>
             @if (!isCollapsed()) { <span>Weather Dashboard</span> }
           </a>
-          <a routerLink="/practice/ecommerce" routerLinkActive="active" class="nav-item">
+          <a routerLink="/practice/ecommerce" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">🛒</span>
             @if (!isCollapsed()) { <span>E-commerce</span> }
           </a>
-          <a routerLink="/practice/chat" routerLinkActive="active" class="nav-item">
+          <a routerLink="/practice/chat" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <span class="nav-emoji">💬</span>
             @if (!isCollapsed()) { <span>Real-time Chat</span> }
           </a>
@@ -277,7 +353,7 @@ import { LessonService } from '../../../core/services/lesson.service';
       .sidebar {
         transform: translateX(-100%);
       }
-      .sidebar:not(.collapsed) {
+      .sidebar.mobile-open {
         transform: translateX(0);
         box-shadow: 0 0 40px rgba(0,0,0,0.2);
       }
@@ -289,6 +365,7 @@ export class SidebarComponent {
   searchService = inject(SearchService);
   progressService = inject(ProgressService);
   private lessonService = inject(LessonService);
+  mobileMenuService = inject(MobileMenuService);
 
   isCollapsed = signal(false);
   totalLessons = signal(0);
@@ -299,5 +376,9 @@ export class SidebarComponent {
 
   toggleSidebar(): void {
     this.isCollapsed.update(v => !v);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuService.close();
   }
 }

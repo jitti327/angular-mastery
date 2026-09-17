@@ -1,17 +1,21 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { UserProgress } from '../models/lesson.model';
+import { LessonService } from './lesson.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProgressService {
   private readonly STORAGE_KEY = 'angular-mastery-progress';
+  private readonly BOOKMARKS_KEY = 'angular-mastery-bookmarks';
+  private lessonService = inject(LessonService);
 
   private progressSignal = signal<UserProgress>(this.loadProgress());
+  bookmarks = signal<number[]>(this.loadBookmarks());
 
   readonly progress = this.progressSignal.asReadonly();
   readonly completedCount = computed(() => this.progressSignal().completedLessons.length);
-  readonly percentage = computed(() => Math.round((this.completedCount() / 10) * 100));
+  readonly percentage = computed(() => Math.round((this.completedCount() / this.lessonService.getLessonCount()) * 100));
 
   private loadProgress(): UserProgress {
     if (typeof localStorage !== 'undefined') {
@@ -78,5 +82,39 @@ export class ProgressService {
       lastAccessed: new Date()
     });
     this.saveProgress();
+  }
+
+  private loadBookmarks(): number[] {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(this.BOOKMARKS_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return [];
+  }
+
+  private saveBookmarks(): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.BOOKMARKS_KEY, JSON.stringify(this.bookmarks()));
+    }
+  }
+
+  toggleBookmark(lessonId: number): void {
+    const current = this.bookmarks();
+    if (current.includes(lessonId)) {
+      this.bookmarks.set(current.filter(id => id !== lessonId));
+    } else {
+      this.bookmarks.set([...current, lessonId]);
+    }
+    this.saveBookmarks();
+  }
+
+  isBookmarked(lessonId: number): boolean {
+    return this.bookmarks().includes(lessonId);
+  }
+
+  getBookmarkedLessons(): number[] {
+    return this.bookmarks();
   }
 }

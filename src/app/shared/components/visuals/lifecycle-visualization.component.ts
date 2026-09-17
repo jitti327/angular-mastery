@@ -129,7 +129,7 @@ interface LifecycleStep {
   `,
   styles: [`
     .lifecycle-container {
-      background: white;
+      background: var(--bg-primary);
       border-radius: 16px;
       padding: 32px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.08);
@@ -142,11 +142,11 @@ interface LifecycleStep {
     .lifecycle-header h2 {
       margin: 0 0 8px;
       font-size: 28px;
-      color: #1a1a1a;
+      color: var(--text-primary);
     }
     .lifecycle-header p {
       margin: 0 0 24px;
-      color: #666;
+      color: var(--text-secondary);
     }
     .controls {
       display: flex;
@@ -176,8 +176,8 @@ interface LifecycleStep {
       cursor: not-allowed;
     }
     .control-btn.reset {
-      background: #f5f5f5;
-      color: #333;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
     }
     .play-icon, .pause-icon { font-size: 16px; }
     .lifecycle-visual {
@@ -201,8 +201,8 @@ interface LifecycleStep {
       transition: all 0.2s;
       position: relative;
     }
-    .step:hover { background: #f5f5f7; }
-    .step.active { background: #f0f4ff; }
+    .step:hover { background: var(--bg-secondary); }
+    .step.active { background: var(--bg-secondary); }
     .step.completed .step-marker { opacity: 1; }
     .step-marker {
       width: 40px;
@@ -225,15 +225,15 @@ interface LifecycleStep {
       display: block;
       font-weight: 600;
       font-size: 14px;
-      color: #333;
+      color: var(--text-primary);
     }
     .step-timing {
       display: block;
       font-size: 12px;
-      color: #999;
+      color: var(--text-secondary);
     }
     .step-details {
-      background: #f9f9f9;
+      background: var(--bg-secondary);
       border-radius: 12px;
       padding: 24px;
     }
@@ -259,14 +259,14 @@ interface LifecycleStep {
     .detail-header h3 {
       margin: 0 0 4px;
       font-size: 20px;
-      color: #1a1a1a;
+      color: var(--text-primary);
     }
     .detail-timing {
       font-size: 13px;
-      color: #666;
+      color: var(--text-secondary);
     }
     .detail-description {
-      color: #555;
+      color: var(--text-secondary);
       line-height: 1.7;
       margin-bottom: 20px;
     }
@@ -296,7 +296,7 @@ interface LifecycleStep {
       line-height: 1.6;
     }
     .lifecycle-diagram {
-      background: #f9f9f9;
+      background: var(--bg-secondary);
       border-radius: 12px;
       padding: 24px;
     }
@@ -315,7 +315,7 @@ interface LifecycleStep {
       filter: url(#glow);
     }
     .step-emoji { font-size: 16px; fill: white; }
-    .step-text { font-size: 11px; fill: #666; font-weight: 500; }
+    .step-text { font-size: 11px; fill: var(--text-secondary); font-weight: 500; }
 
     @media (max-width: 768px) {
       .lifecycle-visual {

@@ -1,5 +1,6 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-code-playground',
@@ -9,7 +10,7 @@ import { FormsModule } from '@angular/forms';
     <div class="playground-container">
       <div class="playground-header">
         <h2>Interactive Code Playground</h2>
-        <p>Edit the code and see the result in real-time</p>
+        <p>Edit JavaScript code and see it execute in real-time</p>
       </div>
 
       <div class="playground-tabs">
@@ -24,69 +25,48 @@ import { FormsModule } from '@angular/forms';
         <div class="editor-panel">
           <div class="editor-header">
             <span class="editor-title">
-              @if (activeTab() === 'TypeScript') { 📄 app.component.ts }
-              @if (activeTab() === 'HTML') { 📝 app.component.html }
-              @if (activeTab() === 'CSS') { 🎨 app.component.css }
+              @if (activeTab() === 'JavaScript') { JS }
+              @if (activeTab() === 'HTML') { HTML }
+              @if (activeTab() === 'CSS') { CSS }
             </span>
             <div class="editor-actions">
-              <button class="action-btn" (click)="copyCode()">📋 Copy</button>
-              <button class="action-btn" (click)="resetCode()">↺ Reset</button>
+              <button class="action-btn" (click)="copyCode()">Copy</button>
+              <button class="action-btn" (click)="resetCode()">Reset</button>
+              <button class="action-btn run-btn" (click)="runCode()">Run</button>
             </div>
           </div>
           <textarea
             class="code-editor"
             [value]="getCurrentCode()"
             (input)="updateCode($event)"
+            (keydown)="onKeyDown($event)"
             spellcheck="false"></textarea>
         </div>
 
         <div class="preview-panel">
           <div class="preview-header">
-            <span class="preview-title">🖥️ Live Preview</span>
+            <span class="preview-title">Preview</span>
             <span class="preview-status" [class.error]="hasError()">
-              @if (hasError()) { ❌ Error } @else { ✅ Running }
+              @if (hasError()) { Error } @else { Running }
             </span>
           </div>
           <div class="preview-frame">
-            @if (hasError()) {
-              <div class="error-overlay">
-                <span class="error-icon">⚠️</span>
-                <p class="error-message">{{ errorMessage() }}</p>
-                <button class="retry-btn" (click)="retry()">Try Again</button>
-              </div>
-            } @else {
-              <div class="preview-content">
-                <div class="mock-component">
-                  <div class="mock-header">
-                    <span class="mock-icon">🅰️</span>
-                    <span>{{ title() }}</span>
-                  </div>
-                  <div class="mock-body">
-                    @if (showCounter()) {
-                      <div class="counter-demo">
-                        <p class="counter-value">{{ counter() }}</p>
-                        <div class="counter-buttons">
-                          <button (click)="decrement()">-</button>
-                          <button (click)="increment()">+</button>
-                        </div>
-                      </div>
-                    }
-                    @if (showList()) {
-                      <ul class="list-demo">
-                        @for (item of items(); track item) {
-                          <li>{{ item }}</li>
-                        }
-                      </ul>
-                    }
-                    @if (showForm()) {
-                      <div class="form-demo">
-                        <input [value]="inputValue()" (input)="inputValue.set($any($event.target).value)" placeholder="Type something...">
-                        <p class="form-output">You typed: {{ inputValue() }}</p>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
+            <iframe
+              [srcdoc]="sandboxHtml()"
+              sandbox="allow-scripts"
+              class="preview-iframe"
+            ></iframe>
+          </div>
+          <div class="console-header">
+            <span class="console-title">Console Output</span>
+            <button class="action-btn" (click)="clearConsole()">Clear</button>
+          </div>
+          <div class="console-output">
+            @for (line of consoleOutput(); track $index) {
+              <div [class]="'console-line ' + line.type">{{ line.text }}</div>
+            }
+            @if (consoleOutput().length === 0) {
+              <div class="console-line empty">No output yet. Click Run or press Ctrl+Enter.</div>
             }
           </div>
         </div>
@@ -107,7 +87,7 @@ import { FormsModule } from '@angular/forms';
   `,
   styles: [`
     .playground-container {
-      background: white;
+      background: var(--bg-primary);
       border-radius: 16px;
       padding: 32px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.08);
@@ -153,7 +133,7 @@ import { FormsModule } from '@angular/forms';
       color: var(--text-primary);
     }
     .playground-tabs button.active {
-      background: white;
+      background: var(--bg-primary);
       color: var(--accent);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
@@ -197,6 +177,13 @@ import { FormsModule } from '@angular/forms';
       background: rgba(255,255,255,0.2);
       color: white;
     }
+    .run-btn {
+      background: #4caf50;
+      color: white;
+    }
+    .run-btn:hover {
+      background: #388e3c;
+    }
     .code-editor {
       width: 100%;
       height: 300px;
@@ -221,120 +208,47 @@ import { FormsModule } from '@angular/forms';
       color: #ff5252;
     }
     .preview-frame {
-      height: 300px;
-      background: white;
-      padding: 20px;
+      height: 250px;
+      background: #fff;
     }
-    .preview-content {
-      height: 100%;
-    }
-    .mock-component {
-      background: #f9f9f9;
-      border-radius: 12px;
-      overflow: hidden;
-      height: 100%;
-    }
-    .mock-header {
-      background: linear-gradient(135deg, #dd0031, #c3002f);
-      color: white;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-    }
-    .mock-icon { font-size: 20px; }
-    .mock-body {
-      padding: 20px;
-    }
-    .counter-demo {
-      text-align: center;
-    }
-    .counter-value {
-      font-size: 48px;
-      font-weight: 700;
-      color: #667eea;
-      margin: 0 0 16px;
-    }
-    .counter-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-    }
-    .counter-buttons button {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .counter-buttons button:first-child {
-      background: #ff5252;
-      color: white;
-    }
-    .counter-buttons button:last-child {
-      background: #4caf50;
-      color: white;
-    }
-    .counter-buttons button:hover {
-      transform: scale(1.1);
-    }
-    .list-demo {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .list-demo li {
-      padding: 12px 16px;
-      background: white;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border-left: 4px solid #667eea;
-      animation: slideIn 0.3s ease-out;
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    .form-demo input {
+    .preview-iframe {
       width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-    .form-demo input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    .form-output {
-      color: #666;
-      font-style: italic;
-    }
-    .error-overlay {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       height: 100%;
-      color: #ff5252;
-    }
-    .error-icon { font-size: 48px; margin-bottom: 16px; }
-    .error-message {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .retry-btn {
-      padding: 10px 20px;
-      background: #ff5252;
-      color: white;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
     }
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #1e1e1e;
+      border-top: 1px solid #333;
+    }
+    .console-title {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .console-output {
+      height: 120px;
+      overflow-y: auto;
+      background: #0d0d0d;
+      padding: 8px 16px;
+      font-family: 'SF Mono', monospace;
+      font-size: 13px;
+    }
+    .console-line {
+      padding: 4px 0;
+      border-bottom: 1px solid #1a1a1a;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .console-line.log { color: #d4d4d4; }
+    .console-line.error { color: #ff5252; }
+    .console-line.warn { color: #ffa726; }
+    .console-line.info { color: #29b6f6; }
+    .console-line.empty { color: #666; font-style: italic; }
     .playground-examples h3 {
       margin: 0 0 16px;
       text-align: center;
@@ -376,69 +290,186 @@ import { FormsModule } from '@angular/forms';
   `]
 })
 export class CodePlaygroundComponent {
-  tabs = ['TypeScript', 'HTML', 'CSS'];
-  activeTab = signal('TypeScript');
+  tabs = ['JavaScript', 'HTML', 'CSS'];
+  activeTab = signal('JavaScript');
 
-  typescriptCode = `@Component({
-  selector: 'app-counter',
-  template: './app.component.html'
-})
-export class CounterComponent {
-  count = signal(0);
-  
-  increment() {
-    this.count.update(v => v + 1);
-  }
-  
-  decrement() {
-    this.count.update(v => v - 1);
-  }
-}`;
+  javascriptCode = `// Variables & Types
+const name = 'JavaScript';
+let version = 2024;
 
-  htmlCode = `<div class="counter">
-  <h1>{{ count() }}</h1>
-  <button (click)="decrement()">-</button>
-  <button (click)="increment()">+</button>
+console.log('Language:', name);
+console.log('Version:', version);
+
+// Object
+const language = {
+  name: 'JavaScript',
+  year: 2024,
+  features: ['async/await', 'generics', 'modules']
+};
+console.log('Language object:', language);`;
+
+  htmlCode = `<div id="app">
+  <h1>Hello, World!</h1>
+  <p>Edit HTML and see changes</p>
 </div>`;
 
-  cssCode = `.counter {
+  cssCode = `#app {
+  font-family: system-ui, sans-serif;
   text-align: center;
+  padding: 20px;
 }
 
 h1 {
-  font-size: 48px;
   color: #667eea;
 }
 
-button {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
+p {
+  color: #666;
 }`;
 
-  title = signal('My Angular App');
-  counter = signal(0);
-  items = signal(['Learn Angular', 'Build Components', 'Master Signals']);
-  inputValue = signal('');
-  showCounter = signal(true);
-  showList = signal(false);
-  showForm = signal(false);
+  consoleOutput = signal<Array<{type: string, text: string}>>([]);
   hasError = signal(false);
   errorMessage = signal('');
+  sandboxHtml = signal('');
 
   examples = [
-    { name: 'Counter', icon: '🔢', type: 'counter' },
-    { name: 'List', icon: '📋', type: 'list' },
-    { name: 'Form', icon: '📝', type: 'form' },
-    { name: 'Timer', icon: '⏱️', type: 'timer' },
+    { name: 'Variables & Types', icon: '\u{1F4CB}', code: `// Variables & Types
+const name = 'JavaScript';
+let version = 2024;
+let isAwesome = true;
+
+console.log('Language:', name);
+console.log('Version:', version);
+console.log('Is awesome:', isAwesome);
+
+// Object
+const framework = {
+  name: 'Angular',
+  year: 2024,
+  features: ['components', 'signals', 'dependency injection']
+};
+
+console.log('Framework:', framework);
+
+// Null and Undefined
+let x = null;
+let y = undefined;
+console.log('null value:', x);
+console.log('undefined value:', y);` },
+    { name: 'Functions', icon: '\u{1F527}', code: `// Functions
+function greet(name) {
+  return 'Hello, ' + name + '!';
+}
+
+console.log(greet('World'));
+console.log(greet('Angular'));
+
+// Arrow functions
+const add = (a, b) => a + b;
+console.log('2 + 3 =', add(2, 3));
+
+// Higher-order function
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+console.log('Original:', numbers);
+console.log('Doubled:', doubled);
+
+// Default parameters
+function power(base, exp = 2) {
+  return Math.pow(base, exp);
+}
+console.log('3^2 =', power(3));
+console.log('2^10 =', power(2, 10));` },
+    { name: 'Array Methods', icon: '\u{1F4CA}', code: `// Array Methods
+const fruits = ['apple', 'banana', 'cherry', 'date'];
+
+console.log('Fruits:', fruits);
+console.log('First:', fruits[0]);
+console.log('Last:', fruits[fruits.length - 1]);
+
+// Filter
+const longNames = fruits.filter(f => f.length > 5);
+console.log('Long names:', longNames);
+
+// Reduce
+const totalLength = fruits.reduce((sum, f) => sum + f.length, 0);
+console.log('Total length:', totalLength);
+
+// Find
+const bFruit = fruits.find(f => f.startsWith('b'));
+console.log('Starts with b:', bFruit);
+
+// Sort
+const numbers = [3, 1, 4, 1, 5, 9, 2, 6];
+console.log('Sorted:', numbers.sort((a, b) => a - b));` },
+    { name: 'Async/Await', icon: '\u23F1\uFE0F', code: `// Async/Await
+async function fetchData(url) {
+  console.log('Fetching:', url);
+
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  return {
+    status: 200,
+    data: { id: 1, name: 'JavaScript' }
+  };
+}
+
+async function main() {
+  console.log('Starting async operations...');
+
+  const result = await fetchData('https://api.example.com/data');
+  console.log('Status:', result.status);
+  console.log('Data:', result.data);
+
+  console.log('Async complete!');
+}
+
+main();` },
+    { name: 'DOM Manipulation', icon: '\u{1F310}', code: `// DOM Manipulation
+const container = document.getElementById('output') || document.body;
+
+// Create elements dynamically
+const div = document.createElement('div');
+div.innerHTML = '<h2 style="color: #667eea; font-family: sans-serif;">Dynamic Content</h2>';
+container.appendChild(div);
+
+// Create a list
+const list = document.createElement('ul');
+list.style.fontFamily = 'sans-serif';
+list.style.paddingLeft = '20px';
+
+const items = ['Created dynamically', 'Can be interactive', 'Pure JavaScript'];
+
+items.forEach(text => {
+  const li = document.createElement('li');
+  li.textContent = text;
+  li.style.margin = '8px 0';
+  list.appendChild(li);
+});
+
+container.appendChild(list);
+
+// Create a button
+const btn = document.createElement('button');
+btn.textContent = 'Click Me!';
+btn.style.cssText = 'margin-top: 12px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;';
+btn.onclick = () => {
+  btn.textContent = 'Clicked! (' + new Date().toLocaleTimeString() + ')';
+  console.log('Button clicked at:', new Date().toISOString());
+};
+container.appendChild(btn);
+
+console.log('DOM manipulation complete!');` },
   ];
+
+  constructor(private sanitizer: DomSanitizer) {
+    this.runCode();
+  }
 
   getCurrentCode(): string {
     switch (this.activeTab()) {
-      case 'TypeScript': return this.typescriptCode;
+      case 'JavaScript': return this.javascriptCode;
       case 'HTML': return this.htmlCode;
       case 'CSS': return this.cssCode;
       default: return '';
@@ -448,18 +479,94 @@ button {
   updateCode(event: Event): void {
     const value = (event.target as HTMLTextAreaElement).value;
     switch (this.activeTab()) {
-      case 'TypeScript': this.typescriptCode = value; break;
+      case 'JavaScript': this.javascriptCode = value; break;
       case 'HTML': this.htmlCode = value; break;
       case 'CSS': this.cssCode = value; break;
     }
   }
 
-  increment(): void {
-    this.counter.update(v => v + 1);
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      this.runCode();
+    }
   }
 
-  decrement(): void {
-    this.counter.update(v => v - 1);
+  runCode(): void {
+    this.hasError.set(false);
+    this.errorMessage.set('');
+    this.consoleOutput.set([]);
+
+    const jsCode = this.javascriptCode;
+    const htmlCode = this.htmlCode;
+    const cssCode = this.cssCode;
+
+    const fullHtml = this.buildHtmlWithCapture(jsCode, htmlCode, cssCode);
+    this.sandboxHtml.set(fullHtml);
+  }
+
+  private buildHtmlWithCapture(jsCode: string, htmlCode: string, cssCode: string): string {
+    const escapedJs = this.escapeHtmlForSrcdoc(jsCode);
+    const escapedCss = this.escapeHtmlForSrcdoc(cssCode);
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <style>${escapedCss}</style>
+</head>
+<body>
+  ${htmlCode}
+  <script>
+    (function() {
+      const output = [];
+      const parentWindow = window.parent;
+
+      function sendOutput(type, args) {
+        const text = args.map(a =>
+          typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)
+        ).join(' ');
+        output.push({ type: type, text: text });
+      }
+
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      const originalInfo = console.info;
+
+      console.log = function() { sendOutput('log', Array.from(arguments)); };
+      console.error = function() { sendOutput('error', Array.from(arguments)); };
+      console.warn = function() { sendOutput('warn', Array.from(arguments)); };
+      console.info = function() { sendOutput('info', Array.from(arguments)); };
+
+      window.onerror = function(msg, src, line, col, err) {
+        sendOutput('error', ['Error: ' + msg + (line ? ' (line ' + line + ')' : '')]);
+        return true;
+      };
+
+      try {
+        ${escapedJs}
+      } catch(e) {
+        sendOutput('error', ['Error: ' + e.message]);
+      }
+
+      try {
+        parentWindow.postMessage({ type: 'console-output', output: output }, '*');
+      } catch(e) {}
+    })();
+  <\/script>
+</body>
+</html>`;
+  }
+
+  private escapeHtmlForSrcdoc(code: string): string {
+    return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent): void {
+    if (event.data && event.data.type === 'console-output') {
+      this.consoleOutput.set(event.data.output);
+    }
   }
 
   copyCode(): void {
@@ -467,53 +574,16 @@ button {
   }
 
   resetCode(): void {
-    this.typescriptCode = `@Component({
-  selector: 'app-counter',
-  template: './app.component.html'
-})
-export class CounterComponent {
-  count = signal(0);
-  
-  increment() {
-    this.count.update(v => v + 1);
-  }
-  
-  decrement() {
-    this.count.update(v => v - 1);
-  }
-}`;
-    this.htmlCode = `<div class="counter">
-  <h1>{{ count() }}</h1>
-  <button (click)="decrement()">-</button>
-  <button (click)="increment()">+</button>
-</div>`;
-    this.cssCode = `.counter {
-  text-align: center;
-}
-
-h1 {
-  font-size: 48px;
-  color: #667eea;
-}
-
-button {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}`;
+    this.loadExample(this.examples[0]);
   }
 
-  retry(): void {
-    this.hasError.set(false);
-    this.errorMessage.set('');
+  clearConsole(): void {
+    this.consoleOutput.set([]);
   }
 
-  loadExample(example: { name: string; icon: string; type: string }): void {
-    this.showCounter.set(example.type === 'counter');
-    this.showList.set(example.type === 'list');
-    this.showForm.set(example.type === 'form');
+  loadExample(example: { name: string; icon: string; code: string }): void {
+    this.javascriptCode = example.code;
+    this.activeTab.set('JavaScript');
+    this.runCode();
   }
 }

@@ -1,9 +1,55 @@
 import { Component, input, output, signal } from '@angular/core';
 import { QuizQuestion } from '../../../core/models/lesson.model';
+import { trigger, transition, style, animate, query, stagger, keyframes } from '@angular/animations';
 
 @Component({
   selector: 'app-quiz',
   standalone: true,
+  animations: [
+    trigger('optionStagger', [
+      transition(':enter', [
+        query('.option-btn', [
+          style({ opacity: 0, transform: 'translateX(-20px)' }),
+          stagger(60, [
+            animate('350ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'translateX(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ]),
+    trigger('fadeInUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(20px)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('correctPulse', [
+      transition(':enter', [
+        animate('600ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', keyframes([
+          style({ transform: 'scale(1)', offset: 0 }),
+          style({ transform: 'scale(1.08)', offset: 0.4 }),
+          style({ transform: 'scale(1)', offset: 1 })
+        ]))
+      ])
+    ]),
+    trigger('wrongShake', [
+      transition(':enter', [
+        animate('500ms', keyframes([
+          style({ transform: 'translateX(0)', offset: 0 }),
+          style({ transform: 'translateX(-8px)', offset: 0.2 }),
+          style({ transform: 'translateX(8px)', offset: 0.4 }),
+          style({ transform: 'translateX(-6px)', offset: 0.6 }),
+          style({ transform: 'translateX(6px)', offset: 0.8 }),
+          style({ transform: 'translateX(0)', offset: 1 })
+        ]))
+      ])
+    ]),
+    trigger('scoreReveal', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.5)' }),
+        animate('800ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', style({ opacity: 1, transform: 'scale(1)' }))
+      ])
+    ])
+  ],
   template: `
     <div class="quiz-container">
       <h3 class="quiz-title">Knowledge Check</h3>
@@ -15,7 +61,7 @@ import { QuizQuestion } from '../../../core/models/lesson.model';
           </div>
           <p class="question-text">{{ questions()[currentQuestion()].question }}</p>
           
-          <div class="options">
+          <div class="options" @optionStagger>
             @for (option of questions()[currentQuestion()].options; track $index) {
               <button
                 class="option-btn"
@@ -36,7 +82,8 @@ import { QuizQuestion } from '../../../core/models/lesson.model';
           }
           
           @if (showExplanation()) {
-            <div class="explanation">
+            <div class="explanation" @fadeInUp
+              [class]="selectedAnswer() === questions()[currentQuestion()].correctIndex ? 'correct-explanation' : 'wrong-explanation'">
               <p [class]="selectedAnswer() === questions()[currentQuestion()].correctIndex ? 'correct-text' : 'wrong-text'">
                 {{ selectedAnswer() === questions()[currentQuestion()].correctIndex ? '✓ Correct!' : '✗ Incorrect' }}
               </p>
@@ -55,8 +102,8 @@ import { QuizQuestion } from '../../../core/models/lesson.model';
           }
         </div>
       } @else {
-        <div class="results-card">
-          <div class="score-circle" [class.passing]="scorePercentage() >= 70">
+        <div class="results-card" @fadeInUp>
+          <div class="score-circle" [class.passing]="scorePercentage() >= 70" @scoreReveal>
             <span class="score-number">{{ scorePercentage() }}%</span>
             <span class="score-label">Score</span>
           </div>
@@ -168,7 +215,16 @@ import { QuizQuestion } from '../../../core/models/lesson.model';
       margin-top: 16px;
       padding: 16px;
       background: rgba(0,0,0,0.2);
-      border-radius: 8px;
+      border-radius: 12px;
+      border-left: 4px solid transparent;
+    }
+    .correct-explanation {
+      border-left-color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+    .wrong-explanation {
+      border-left-color: #ff9800;
+      background: rgba(255, 152, 0, 0.1);
     }
     .correct-text {
       color: #4caf50;

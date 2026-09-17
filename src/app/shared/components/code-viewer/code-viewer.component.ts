@@ -1,4 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, input, AfterViewChecked, ElementRef, ViewChild } from '@angular/core';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup';
 
 @Component({
   selector: 'app-code-viewer',
@@ -21,7 +25,7 @@ import { Component, input } from '@angular/core';
           </button>
         }
       </div>
-      <pre class="code-block"><code [class]="'language-' + activeTab">{{ getCode() }}</code></pre>
+      <pre class="code-block"><code #codeEl [class]="'language-' + activeTab">{{ getCode() }}</code></pre>
       @if (description()) {
         <div class="code-description">
           <p>{{ description() }}</p>
@@ -101,15 +105,25 @@ import { Component, input } from '@angular/core';
     }
   `]
 })
-export class CodeViewerComponent {
+export class CodeViewerComponent implements AfterViewChecked {
   title = input.required<string>();
   typescript = input.required<string>();
   html = input('');
   css = input('');
   description = input('');
 
+  @ViewChild('codeEl') codeEl!: ElementRef<HTMLElement>;
+
   activeTab = 'typescript';
   copied = false;
+  private needsHighlight = false;
+
+  ngAfterViewChecked(): void {
+    if (this.needsHighlight && this.codeEl) {
+      this.needsHighlight = false;
+      Prism.highlightElement(this.codeEl.nativeElement);
+    }
+  }
 
   get tabs(): string[] {
     const tabs = ['typescript'];
@@ -119,6 +133,7 @@ export class CodeViewerComponent {
   }
 
   getCode(): string {
+    this.needsHighlight = true;
     switch (this.activeTab) {
       case 'typescript': return this.typescript();
       case 'html': return this.html();

@@ -785,5 +785,180 @@ export const ADVANCED_LESSONS: Lesson[] = [
       { id: 'streaming-ui', title: 'Streaming UI Patterns', content: '**Practice - Typing Indicator:**\n```html\n@if (isStreaming()) {\n  <div class="typing-indicator">\n    <span class="dot"></span>\n    <span class="dot"></span>\n    <span class="dot"></span>\n  </div>\n}\n\n@for (message of messages(); track $index) {\n  <div class="message" [class.user]="message.role === \'user\'">\n    {{ message.content }}\n  </div>\n}\n```' },
       { id: 'ai-state', title: 'AI State Management', content: '**Practice - AI State Service:**\n```typescript\n@Injectable({ providedIn: \'root\' })\nexport class AiStateService {\n  private conversations = signal<Map<string, ChatMessage[]>>(new Map());\n  private currentConversation = signal<string | null>(null);\n\n  readonly messages = computed(() => {\n    const id = this.currentConversation();\n    return id ? this.conversations().get(id) || [] : [];\n  });\n\n  createConversation() {\n    const id = crypto.randomUUID();\n    this.conversations.update(map => {\n      const newMap = new Map(map);\n      newMap.set(id, []);\n      return newMap;\n    });\n    this.currentConversation.set(id);\n    return id;\n  }\n}\n```' }
     ]
+  },
+  {
+    id: 43, slug: 'angular-cdk', title: 'Angular CDK Deep Dive',
+    description: 'Master the Angular Component Dev Kit for advanced UI patterns.',
+    level: 'advanced', duration: '45 min',
+    objectives: ['Master CDK virtual scrolling for large lists', 'Build overlay-based components', 'Implement drag and drop', 'Add accessibility with CDK a11y'],
+    quiz: [
+      {
+        id: 1,
+        question: 'What is the primary benefit of cdk-virtual-scroll over manual virtualization?',
+        options: ['It requires less memory', 'It provides a ready-to-use viewport that recycles DOM elements for thousands of items without manual DOM manipulation', 'It works with any CSS framework', 'It automatically handles server-side rendering'],
+        correctIndex: 1,
+        explanation: 'cdk-virtual-scroll-viewport manages DOM recycling automatically, rendering only visible items while reusing DOM nodes as the user scrolls, eliminating the need for complex manual virtualization logic.'
+      },
+      {
+        id: 2,
+        question: 'What does the CDK Overlay module provide?',
+        options: ['CSS overlay effects', 'A service to dynamically position floating elements like tooltips, menus, and dialogs relative to any anchor element', 'Image overlay components', 'SVG overlay capabilities'],
+        correctIndex: 1,
+        explanation: 'The CDK Overlay module provides a powerful service for creating and positioning floating UI elements (tooltips, popups, menus) with automatic scroll and resize repositioning.'
+      },
+      {
+        id: 3,
+        question: 'How does CDK a11y ListKeyManager help with accessibility?',
+        options: ['It generates ARIA labels automatically', 'It manages keyboard navigation patterns for lists, allowing arrow key traversal and type-ahead matching', 'It tests accessibility in CI/CD', 'It replaces ARIA roles'],
+        correctIndex: 1,
+        explanation: 'ListKeyManager handles keyboard interaction patterns for list-like components, supporting arrow key navigation, type-ahead search, and active item management for screen readers.'
+      }
+    ],
+    topics: [
+      { id: 'virtual-scroll', title: 'Virtual Scrolling (cdk-virtual-scroll)', content: '**Practice - Large List Virtual Scroll:**\n```typescript\n@Component({\n  imports: [ScrollingModule],\n  template: `\n    <cdk-virtual-scroll-viewport itemSize="48" class="viewport">\n      @for (item of items; track item.id) {\n        <div class="scroll-item">{{ item.name }}</div>\n      }\n    </cdk-virtual-scroll-viewport>\n  `\n})\nexport class VirtualListComponent {\n  items = Array.from({ length: 100000 }, (_, i) => ({\n    id: i, name: `Item ${i}`\n  }));\n}\n```\n**Viewport methods:** scrollToIndex(offset), scrollToBottom()\n**Use for:** chat logs, data tables, infinite feeds with 10k+ items.' },
+      { id: 'overlay', title: 'Overlay (cdk-overlay)', content: '**Practice - Dynamic Overlay Menu:**\n```typescript\nimport { Overlay, OverlayRef } from \'@angular/cdk/overlay\';\nimport { ComponentPortal } from \'@angular/cdk/portal\';\n\n@Injectable({ providedIn: \'root\' })\nexport class MenuService {\n  private overlayRef: OverlayRef | null = null;\n\n  constructor(private overlay: Overlay) {}\n\n  openMenu(origin: HTMLElement) {\n    const strategy = this.overlay\n      .position()\n      .flexibleConnectedTo(origin)\n      .withPositions([\n        { originX: \'start\', originY: \'bottom\', overlayX: \'start\', overlayY: \'top\' },\n        { originX: \'start\', originY: \'top\', overlayX: \'start\', overlayY: \'bottom\' }\n      ]);\n\n    this.overlayRef = this.overlay.create({\n      positionStrategy: strategy,\n      hasBackdrop: true\n    });\n    this.overlayRef.attach(new ComponentPortal(DropdownComponent));\n  }\n}\n```\n**Position strategies:** flexibleConnectedTo, global, connected\n**Backdrop options:** hasBackdrop, backdropClass, backdropClick' },
+      { id: 'drag-drop', title: 'Drag & Drop (cdk-drag)', content: '**Practice - Sortable Drag List:**\n```typescript\n@Component({\n  imports: [CdkDrag, CdkDragDrop, CdkDropList],\n  template: `\n    <div cdkDropList (cdkDropListDropped)="onDrop($event)">\n      @for (item of items; track item.id) {\n        <div cdkDrag class="drag-item">\n          <span cdkDragHandle class="handle">::</span>\n          {{ item.name }}\n        </div>\n      }\n    </div>\n  `\n})\nexport class SortableListComponent {\n  items = signal([...]);\n\n  onDrop(event: CdkDragDrop<string[]>) {\n    this.items.update(list => {\n      const updated = [...list];\n      moveItemInArray(updated, event.previousIndex, event.currentIndex);\n      return updated;\n    });\n  }\n}\n```\n**Directives:** cdkDrag, cdkDragHandle, cdkDragPreview, cdkDragPlaceholder\n**Transfer:** transferArrayItem, moveItemInArray, copyArrayItem' },
+      { id: 'a11y', title: 'Accessibility (cdk-a11y)', content: '**Practice - ListKeyManager:**\n```typescript\nimport { ListKeyManager } from \'@angular/cdk/a11y\';\n\n@Component({})\nexport class AccessibleListComponent implements AfterViewInit {\n  @ViewChildren(MenuItemDirective) menuItems!: QueryList<MenuItemDirective>;\n  private keyManager!: ListKeyManager<MenuItemDirective>;\n\n  ngAfterViewInit() {\n    this.keyManager = new ListKeyManager(this.menuItems)\n      .withTypeAhead()\n      .withWrap();\n\n    fromEvent<KeyboardEvent>(this.menuEl.nativeElement, \'keydown\')\n      .subscribe(e => this.keyManager.onKeydown(e));\n  }\n}\n```\n**Key managers:** ListKeyManager, ActiveDescendantKeyManager\n**Other a11y tools:** AriaDescriber, FocusTrap, InteractivityChecker' }
+    ]
+  },
+  {
+    id: 44, slug: 'angular-web-components', title: 'Web Components with Angular',
+    description: 'Create and consume Web Components using Angular.',
+    level: 'advanced', duration: '40 min',
+    objectives: ['Wrap Angular components as Web Components', 'Use Web Components in Angular templates', 'Understand Shadow DOM encapsulation', 'Build framework-agnostic component libraries'],
+    quiz: [
+      {
+        id: 1,
+        question: 'What is the key difference between Angular components and Web Components?',
+        options: ['Web Components are faster', 'Web Components use browser-native APIs (Custom Elements, Shadow DOM) and work across any framework', 'Angular components do not support templates', 'Web Components require a build step'],
+        correctIndex: 1,
+        explanation: 'Web Components use browser-native standards (Custom Elements v1, Shadow DOM, HTML Templates) making them framework-agnostic, while Angular components depend on the Angular runtime.'
+      },
+      {
+        id: 2,
+        question: 'What does CUSTOM_ELEMENTS_SCHEMA allow in Angular?',
+        options: ['Importing any npm package', 'Using non-Angular custom elements in templates without compilation errors', 'Disabling template validation', 'Creating new HTML elements'],
+        correctIndex: 1,
+        explanation: 'CUSTOM_ELEMENTS_SCHEMA tells the Angular compiler to allow unknown elements (custom elements) in templates, preventing errors when using Web Components.'
+      },
+      {
+        id: 3,
+        question: 'What does the Shadow DOM provide?',
+        options: ['Better performance', 'Encapsulated DOM and styles that do not leak out or get affected by the outer page', 'Server-side rendering', 'Improved SEO'],
+        correctIndex: 1,
+        explanation: 'Shadow DOM creates a scoped DOM subtree where styles and markup are encapsulated, preventing CSS conflicts and DOM manipulation from the outside.'
+      }
+    ],
+    topics: [
+      { id: 'create', title: 'Creating Web Components with Angular', content: '**Practice - Build Web Component:**\n```typescript\n// Install: npm i @angular/elements\nimport { createApplication } from \'@angular/platform-browser\';\nimport { createCustomElement } from \'@angular/elements\';\nimport { AlertComponent } from \'./alert.component\';\n\n(async () => {\n  const app = await createApplication({\n    providers: [provideHttpClient()]\n  });\n\n  const alertElement = createCustomElement(AlertComponent, { injector: app.injector });\n  customElements.define(\'app-alert\', alertElement);\n})();\n```\n**Key point:** createCustomElement bridges Angular components to the Custom Elements API. The component must be standalone or declared in the bootstrapped module.' },
+      { id: 'shadow-dom', title: 'Shadow DOM Encapsulation', content: '**Practice - Shadow DOM Strategies:**\n```typescript\n// Encapsulated (default for Web Components)\n@Component({\n  encapsulation: ViewEncapsulation.ShadowDom,\n  selector: \'app-card\',\n  template: `<div class="card"><ng-content></ng-content></div>`\n})\nexport class CardComponent {}\n\n// Use ::slotted() in CSS to style projected content\n// styles: [\'::slotted(*) { margin: 8px; }\']\n```\n**Encapsulation modes:** ShadowDom (scoped), Emulated (attribute-based), None (global)\n**Shadow DOM benefits:** Style isolation, DOM encapsulation, scoped slots via ::slotted()' },
+      { id: 'consume', title: 'Using Web Components in Angular', content: '**Practice - Import Web Components:**\n```typescript\n// In app.config.ts or module\nconst components: any[] = [\n  [\'my-button\', () => import(\'./components/my-button\')],\n  [\'my-dialog\', () => import(\'./components/my-dialog\')]\n];\n\n// Custom element loader service\n@Injectable({ providedIn: \'root\' })\nexport class CustomElementLoaderService {\n  private loaded = new Set<string>();\n\n  async load(name: string, importFn: () => Promise<any>) {\n    if (!this.loaded.has(name)) {\n      const module = await importFn();\n      customElements.define(name, module.default);\n      this.loaded.add(name);\n    }\n  }\n}\n```\n**In template:** `<my-button label="Click me"></my-button>`\n**Schemas:** Add CUSTOM_ELEMENTS_SCHEMA to suppress unknown element errors.' },
+      { id: 'framework-agnostic', title: 'Framework-Agnostic Libraries', content: '**Practice - Multi-Framework Package:**\n```\nmy-ui-lib/\n├── src/\n│   ├── button.element.ts    # Web Component (framework-agnostic)\n│   ├── button.component.ts  # Angular wrapper\n│   ├── Button.vue           # Vue wrapper\n│   └── Button.tsx           # React wrapper\n└── package.json\n```\n**Build strategy:** Compile Web Components to ES2015+, use bundler for tree-shaking, ship as single bundle with sideEffects: false.\n**Angular wrapper pattern:** Use @angular/elements createCustomElement to wrap the Web Component back for Angular consumers, adding Angular-specific inputs/outputs.' }
+    ]
+  },
+  {
+    id: 45, slug: 'rxjs-advanced-patterns', title: 'Advanced RxJS Patterns',
+    description: 'Master advanced RxJS operators, testing, and custom patterns.',
+    level: 'advanced', duration: '45 min',
+    objectives: ['Build custom RxJS operators', 'Write marble tests for observables', 'Master scheduler patterns', 'Create custom observable factories'],
+    quiz: [
+      {
+        id: 1,
+        question: 'What is the key advantage of using pipeable (lettable) operators over patchable operators?',
+        options: ['They run faster', 'They are tree-shakable and composable, allowing only imported operators to be included in the bundle', 'They support more operators', 'They are required by TypeScript'],
+        correctIndex: 1,
+        explanation: 'Pipeable operators are standalone functions that can be imported individually, enabling tree-shaking to remove unused operators from the final bundle, unlike the old patchable prototype methods.'
+      },
+      {
+        id: 2,
+        question: 'What does the animationFrameScheduler do?',
+        options: ['Runs code at 60fps using requestAnimationFrame', 'Schedules work on the animation frame for smooth visual updates without blocking user interactions', 'Handles CSS animations', 'Replaces setTimeout in all cases'],
+        correctIndex: 1,
+        explanation: 'animationFrameScheduler leverages requestAnimationFrame to schedule observables to emit on the next animation frame, ideal for scroll or resize updates that sync with the browser paint cycle.'
+      },
+      {
+        id: 3,
+        question: 'What is the purpose of the defer() factory in RxJS?',
+        options: ['To delay emissions by a fixed time', 'To create a new Observable on subscription, allowing lazy evaluation of the source', 'To defer error handling', 'To pause an Observable'],
+        correctIndex: 1,
+        explanation: 'defer() creates a fresh Observable each time a subscriber connects, ensuring the source (like an HTTP call) is only created and executed when someone actually subscribes.'
+      }
+    ],
+    topics: [
+      { id: 'custom-operators', title: 'Custom Operators with pipe()', content: '**Practice - Reusable Operator:**\n```typescript\nimport { OperatorFunction, map } from \'rxjs\';\n\n// Operator that strips nulls and maps\nexport function pluckNonNull<T, R>(key: keyof T): OperatorFunction<T, R> {\n  return (source$) => source$.pipe(\n    filter(item => item[key] != null),\n    map(item => item[key] as R)\n  );\n}\n\n// Usage\nthis.http.get<User[]>(\'/api/users\').pipe(\n  pluckNonNull(\'email\'),\n  distinctUntilChanged()\n).subscribe(email => console.log(email));\n```\n**Pattern:** Return a function that takes source$ and returns a new Observable. Use pipe() to compose existing operators inside.' },
+      { id: 'marble-testing', title: 'Marble Testing', content: '**Practice - Test with Marble Diagrams:**\n```typescript\nimport { TestScheduler } from \'rxjs/testing\';\n\ndescribe(\'debounceTime operator\', () => {\n  let scheduler: TestScheduler;\n\n  beforeEach(() => {\n    scheduler = new TestScheduler((actual, expected) => {\n      expect(actual).toEqual(expected);\n    });\n  });\n\n  it(\'should debounce emissions\', () => {\n    scheduler.run(({ cold, expectObservable }) => {\n      const source = cold(\'--a--b--c--d--|\');\n      const expected = \'  ----a----b----(d|)\';\n\n      expectObservable(source.pipe(debounceTime(3))).toBe(expected);\n    });\n  });\n});\n```\n**Marble syntax:** a-z = emitted values, - = frame, | = complete, # = error, ^ = subscription point' },
+      { id: 'schedulers', title: 'Scheduler Patterns', content: '**Practice - Scheduler Comparison:**\n```typescript\nimport { asyncScheduler, animationFrameScheduler, asapScheduler, observeOn } from \'rxjs\';\n\n// asyncScheduler - like setTimeout(fn, 0)\nsource$.pipe(observeOn(asyncScheduler));\n\n// animationFrameScheduler - requestAnimationFrame\nscroll$.pipe(observeOn(animationFrameScheduler)).subscribe(updateUI);\n\n// asapScheduler - microtask queue (Promise)\nsource$.pipe(observeOn(asapScheduler));\n\n// queueScheduler - synchronous, queued\nsource$.pipe(observeOn(queueScheduler));\n```\n**When to use:**\n- animationFrameScheduler: scroll, resize, animations\n- asyncScheduler: batching, yielding to browser\n- asapScheduler: urgent but non-blocking\n- queueScheduler: synchronous processing' },
+      { id: 'creation-patterns', title: 'Observable Creation Patterns', content: '**Practice - Creation Functions:**\n```typescript\nimport { defer, generate, iif, of } from \'rxjs\';\n\n// defer - lazy source creation\nconst apiCall$ = defer(() => this.http.get(\'/api/data\'));\n\n// generate - iterative emission\nconst count$ = generate({\n  initialState: 0,\n  condition: x => x < 10,\n  iterate: x => x + 1\n});\n\n// iif - conditional source\nconst data$ = iif(\n  () => this.isAuthenticated(),\n  this.http.get(\'/api/protected\'),\n  this.http.get(\'/api/public\')\n);\n\n// Connectable - multicast\nconst hot$ = connectable(source$, {\n  connector: () => new Subject(),\n  resetOnDisconnect: false\n});\nhot$.connect();\n```' }
+    ]
+  },
+  {
+    id: 46, slug: 'runtime-i18n', title: 'Runtime Internationalization',
+    description: 'Implement dynamic, runtime translation loading in Angular applications.',
+    level: 'advanced', duration: '40 min',
+    objectives: ['Implement runtime translation loading', 'Handle pluralization with ICU format', 'Support RTL layouts', 'Switch languages without page reload'],
+    quiz: [
+      {
+        id: 1,
+        question: 'What is the main advantage of runtime i18n (e.g., Transloco) over Angular\'s built-in i18n?',
+        options: ['Built-in i18n is slower', 'Runtime i18n loads translations dynamically without rebuilding, enabling language switching without page reload', 'Built-in i18n does not support pluralization', 'Runtime i18n is simpler to set up'],
+        correctIndex: 1,
+        explanation: 'Angular\'s built-in i18n requires separate builds per language. Runtime solutions like Transloco fetch translation files dynamically and switch languages instantly without reloading the page.'
+      },
+      {
+        id: 2,
+        question: 'What does the ICU message format handle?',
+        options: ['Currency conversion', 'Pluralization and gender-based translations using expressions like {count, plural, =0 {No items} other {# items}}', 'International phone numbers', 'Timezone conversion'],
+        correctIndex: 1,
+        explanation: 'ICU (International Components for Unicode) message format defines plural forms, gender selections, and select expressions in a single translatable string.'
+      },
+      {
+        id: 3,
+        question: 'How do you implement RTL (right-to-left) layout support?',
+        options: ['Flip all CSS manually', 'Set the dir attribute on the html element and use CSS logical properties like margin-inline-start', 'Use a different framework', 'It is not possible in Angular'],
+        correctIndex: 1,
+        explanation: 'Set dir="rtl" or dir="ltr" on the document and use CSS logical properties (margin-inline-start, padding-inline-end) which automatically flip based on text direction.'
+      }
+    ],
+    topics: [
+      { id: 'transloco-setup', title: 'Transloco Library Setup', content: '**Practice - Install and Configure:**\n```bash\nng add @jsverse/transloco\n```\n\n```typescript\n// app.config.ts\nprovideTransloco({\n  config: {\n    defaultLang: \'en\',\n    reRenderOnLangChange: true,\n    availableLangs: [\'en\', \'es\', \'fr\', \'ar\']\n  },\n  loader: TranslocoHttpLoader\n})\n```\n\n```typescript\n// translation-loader.service.ts\n@Injectable({ providedIn: \'root\' })\nexport class TranslocoHttpLoader implements TranslocoLoader {\n  constructor(private http: HttpClient) {}\n  getTranslation(lang: string): Observable<Translation> {\n    return this.http.get<Translation>(`/assets/i18n/${lang}.json`);\n  }\n}\n```\n**Files:** /assets/i18n/en.json, es.json, fr.json, ar.json' },
+      { id: 'icu-pluralization', title: 'ICU Message Format & Pluralization', content: '**Practice - ICU Expressions:**\n```json\n{\n  "items_count": "{count, plural, =0 {No items} =1 {One item} other {# items}}",\n  "greeting": "{gender, select, male {Hello Mr.} female {Hello Ms.} other {Hello}}",\n  "files": "{count, plural, =0 {No files uploaded} one {1 file uploaded} other {# files uploaded}}"\n}\n```\n\n**In template:**\n```html\n<p>{{ \'items_count\' | transloco: { count: itemCount } }}</p>\n```\n\n**With Transloco:**\n```typescript\ntranslocoService.translate(\'items_count\', { count: 5 });\n// Output: \"5 items\"\n```\n**Plural keywords:** =0 (exact), one (singular), few, many, other (default)' },
+      { id: 'rtl-support', title: 'Right-to-Left (RTL) Support', content: '**Practice - RTL Configuration:**\n```typescript\n@Injectable({ providedIn: \'root\' })\nexport class DirectionService {\n  private direction = signal<\'ltr\' | \'rtl\'>(\'ltr\');\n\n  readonly isRtl = computed(() => this.direction() === \'rtl\');\n\n  setDirection(lang: string) {\n    const rtlLangs = [\'ar\', \'he\', \'fa\', \'ur\'];\n    const dir = rtlLangs.includes(lang) ? \'rtl\' : \'ltr\';\n    this.direction.set(dir);\n    document.documentElement.setAttribute(\'dir\', dir);\n  }\n}\n```\n\n**CSS logical properties:**\n```css\n.sidebar { margin-inline-start: 16px; padding-inline-end: 24px; }\n.text { text-align: start; }\n```\n**Avoid:** margin-left/right, float: left/right, text-align: left/right' },
+      { id: 'language-switching', title: 'Language Switching Without Reload', content: '**Practice - Instant Language Switch:**\n```typescript\n@Component({})\nexport class LanguageSwitcherComponent {\n  private transloco = inject(TranslocoService);\n  private directionService = inject(DirectionService);\n\n  availableLangs = this.transloco.langChanges$.pipe(\n    switchMap(() => this.transloco.getAvailableLangs())\n  );\n\n  currentLang = this.transloco.langChanges$;\n\n  switchLang(lang: string) {\n    this.transloco.setActiveLang(lang);\n    this.directionService.setDirection(lang);\n    localStorage.setItem(\'lang\', lang);\n  }\n}\n```\n\n**Persist preference:**\n```typescript\n// In APP_INITIALIZER\nconst savedLang = localStorage.getItem(\'lang\') || \'en\';\ntranslocoService.setActiveLang(savedLang);\n```\n**Angular i18n alternative:** Requires separate builds per locale, full page reload to switch.' }
+    ]
+  },
+  {
+    id: 47, slug: 'state-management-patterns', title: 'State Management Patterns',
+    description: 'Compare and implement modern state management approaches in Angular.',
+    level: 'advanced', duration: '45 min',
+    objectives: ['Compare state management libraries', 'Implement NgRx Signal Store', 'Build signal-based state services', 'Choose the right pattern for your app'],
+    quiz: [
+      {
+        id: 1,
+        question: 'What is the primary advantage of NgRx Signal Store over traditional NgRx?',
+        options: ['More boilerplate', 'Less boilerplate with signal-based reactivity, while retaining NgRx DevTools and store patterns', 'Better performance only', 'It replaces RxJS entirely'],
+        correctIndex: 1,
+        explanation: 'NgRx Signal Store combines the simplicity of Angular signals with NgRx features like DevTools, patchState, and feature stores, dramatically reducing boilerplate compared to traditional actions/reducers/effects.'
+      },
+      {
+        id: 2,
+        question: 'When should you use a simple signal-based service over a full state management library?',
+        options: ['Always', 'For small-to-medium features with local state that do not need time-travel debugging or cross-component state sharing', 'Never - always use a library', 'Only for prototypes'],
+        correctIndex: 1,
+        explanation: 'Signal-based services are ideal for feature-local state with simple updates. Full libraries like NgRx shine when you need DevTools, middleware, complex async flows, or state shared across many unrelated components.'
+      },
+      {
+        id: 3,
+        question: 'What does ComponentStore excel at?',
+        options: ['Global app state', 'Managing feature-specific state with scoped effects, automatically cleaned up when the component is destroyed', 'Replacing HttpClient', 'Server-side rendering'],
+        correctIndex: 1,
+        explanation: 'ComponentStore is designed for feature-level state management with automatic lifecycle management. Effects are scoped to the component, preventing memory leaks and simplifying cleanup.'
+      }
+    ],
+    topics: [
+      { id: 'ngrx-signal-store', title: 'NgRx Signal Store', content: '**Practice - Define Signal Store:**\n```typescript\nimport { signalStore, withState, withMethods, patchState, withComputed } from \'@ngrx/signals\';\n\ninterface TodoState {\n  todos: Todo[];\n  filter: \'all\' | \'active\' | \'completed\';\n  loading: boolean;\n}\n\nconst initialState: TodoState = {\n  todos: [],\n  filter: \'all\',\n  loading: false\n};\n\nexport const TodoStore = signalStore(\n  { providedIn: \'root\' },\n  withState(initialState),\n  withComputed(({ todos, filter }) => ({\n    filteredTodos: computed(() => {\n      const f = filter();\n      if (f === \'active\') return todos().filter(t => !t.completed);\n      if (f === \'completed\') return todos().filter(t => t.completed);\n      return todos();\n    })\n  })),\n  withMethods((store, todoService = inject(TodoService)) => ({\n    async loadTodos() {\n      patchState(store, { loading: true });\n      const todos = await lastValueFrom(todoService.getTodos());\n      patchState(store, { todos, loading: false });\n    },\n    addTodo(text: string) {\n      patchState(store, (state) => ({\n        todos: [...state.todos, { id: Date.now(), text, completed: false }]\n      }));\n    }\n  }))\n);\n```\n**Key APIs:** signalStore, withState, withMethods, withComputed, patchState, withHooks' },
+      { id: 'signal-services', title: 'Signal-Based State Services', content: '**Practice - Manual Signal State:**\n```typescript\n@Injectable({ providedIn: \'root\' })\nexport class CartStateService {\n  private items = signal<CartItem[]>([]);\n  private coupon = signal<string | null>(null);\n\n  readonly itemCount = computed(() => this.items().length);\n  readonly subtotal = computed(() =>\n    this.items().reduce((sum, item) => sum + item.price * item.qty, 0)\n  );\n  readonly discount = computed(() => {\n    const c = this.coupon();\n    if (c === \'SAVE10\') return this.subtotal() * 0.1;\n    return 0;\n  });\n  readonly total = computed(() => this.subtotal() - this.discount());\n\n  addItem(product: Product) {\n    this.items.update(items => {\n      const existing = items.find(i => i.productId === product.id);\n      if (existing) {\n        return items.map(i => i.productId === product.id ? { ...i, qty: i.qty + 1 } : i);\n      }\n      return [...items, { productId: product.id, name: product.name, price: product.price, qty: 1 }];\n    });\n  }\n\n  applyCoupon(code: string) {\n    this.coupon.set(code);\n  }\n}\n```\n**Pattern:** signals for state, computed for derived state, methods for mutations.' },
+      { id: 'component-store', title: 'ComponentStore', content: '**Practice - Feature Store:**\n```typescript\n@Injectable()\nexport class DashboardStore extends ComponentStore<DashboardState> {\n  constructor() {\n    super({ widgets: [], loading: false, error: null });\n  }\n\n  readonly widgets = this.select(s => s.widgets);\n  readonly loading = this.select(s => s.loading);\n\n  readonly loadWidgets = this.effect<void>(trigger$ =>\n    trigger$.pipe(\n      tap(() => this.patchState({ loading: true })),\n      switchMap(() => this.widgetService.getAll().pipe(\n        tapResponse(\n          widgets => this.patchState({ widgets, loading: false }),\n          error => this.patchState({ error, loading: false })\n        )\n      ))\n    )\n  );\n\n  readonly addWidget = this.updater((state, widget: Widget) => ({\n    ...state,\n    widgets: [...state.widgets, widget]\n  }));\n}\n```\n**Benefits:** Automatic effect cleanup, scoped to component lifecycle, selector memoization.' },
+      { id: 'choosing-pattern', title: 'When to Use Which Pattern', content: '**Decision Matrix:**\n```\n| Pattern              | Best For                              | Complexity |\n|----------------------|---------------------------------------|------------|\n| Signal Service       | Feature-local state, simple apps      | Low        |\n| ComponentStore       | Feature stores with effects           | Medium     |\n| NgRx Signal Store    | Medium apps needing DevTools          | Medium     |\n| Traditional NgRx     | Large apps, strict patterns, teams    | High       |\n| Elf/Akita            | Lightweight, rxjs-first state         | Medium     |\n```\n\n**Guidelines:**\n- Start with signal services, upgrade when needed\n- ComponentStore for feature modules with async flows\n- NgRx Signal Store for app-wide state with DevTools needs\n- Traditional NgRx for enterprise teams with established patterns\n- Consider team size, debugging needs, and async complexity' }
+    ]
   }
 ];

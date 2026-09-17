@@ -2,103 +2,158 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { LessonService, LessonCategory } from '../../../core/services/lesson.service';
 import { ProgressService } from '../../../core/services/progress.service';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+
+interface CategoryInfo {
+  id: LessonCategory;
+  label: string;
+  icon: string;
+  color: string;
+}
 
 @Component({
   selector: 'app-lessons-list',
   standalone: true,
   imports: [RouterLink],
+  animations: [
+    trigger('staggerLessons', [
+      transition('* => *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateX(-20px)' }),
+          stagger(40, [
+            animate('350ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'translateX(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ]),
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(20px)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ],
   template: `
     <div class="lessons-container">
-      <header class="lessons-header">
+      <header class="lessons-header" @fadeIn>
         <h1>{{ pageTitle() }}</h1>
         <p>{{ pageDescription() }}</p>
         <div class="category-tabs">
-          <button 
-            [class.active]="activeCategory() === 'angular'" 
-            (click)="setCategory('angular')"
-            class="category-tab angular">
-            🅰️ Angular
-          </button>
-          <button 
-            [class.active]="activeCategory() === 'javascript'" 
-            (click)="setCategory('javascript')"
-            class="category-tab javascript">
-            📜 JavaScript
-          </button>
-          <button 
-            [class.active]="activeCategory() === 'typescript'" 
-            (click)="setCategory('typescript')"
-            class="category-tab typescript">
-            🔷 TypeScript
-          </button>
+          @for (cat of categories; track cat.id) {
+            <button 
+              [class.active]="activeCategory() === cat.id" 
+              (click)="setCategory(cat.id)"
+              class="category-tab"
+              [style.--cat-color]="cat.color">
+              <span class="tab-icon">{{ cat.icon }}</span>
+              <span class="tab-label">{{ cat.label }}</span>
+            </button>
+          }
         </div>
       </header>
 
-      <div class="level-section">
-        <h2 class="level-title beginner">🟢 Beginner Level</h2>
-        <div class="lessons-grid">
-          @for (lesson of beginnerLessons(); track lesson.id) {
-            <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
-              <div class="lesson-number">{{ lesson.id }}</div>
-              <div class="lesson-info">
-                <h3>{{ lesson.title }}</h3>
-                <p>{{ lesson.description }}</p>
-                <div class="lesson-meta">
-                  <span>⏱ {{ lesson.duration }}</span>
-                  <span>📚 {{ lesson.topics.length }} topics</span>
+      @if (bookmarkedLessons().length > 0) {
+        <div class="level-section">
+          <h2 class="level-title bookmarked">Bookmarked Lessons</h2>
+          <div class="lessons-grid" [@staggerLessons]="bookmarkedLessons().length">
+            @for (lesson of bookmarkedLessons(); track lesson.id; let i = $index) {
+              <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
+                <div class="lesson-number" [style.background]="getCategoryColor(lesson.id)">{{ i + 1 }}</div>
+                <div class="lesson-info">
+                  <h3>{{ lesson.title }}</h3>
+                  <p>{{ lesson.description }}</p>
+                  <div class="lesson-meta">
+                    <span>{{ lesson.duration }}</span>
+                    <span>{{ lesson.topics.length }} topics</span>
+                    <span class="level-badge" [class]="lesson.level">{{ lesson.level }}</span>
+                  </div>
                 </div>
-              </div>
-              @if (progressService.isLessonCompleted(lesson.id)) {
-                <span class="completed-badge">✓</span>
-              }
-            </a>
-          }
+                @if (progressService.isLessonCompleted(lesson.id)) {
+                  <span class="completed-badge">✓</span>
+                }
+              </a>
+            }
+          </div>
         </div>
-      </div>
+      }
 
-      <div class="level-section">
-        <h2 class="level-title intermediate">🟠 Intermediate Level</h2>
-        <div class="lessons-grid">
-          @for (lesson of intermediateLessons(); track lesson.id) {
-            <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
-              <div class="lesson-number">{{ lesson.id }}</div>
-              <div class="lesson-info">
-                <h3>{{ lesson.title }}</h3>
-                <p>{{ lesson.description }}</p>
-                <div class="lesson-meta">
-                  <span>⏱ {{ lesson.duration }}</span>
-                  <span>📚 {{ lesson.topics.length }} topics</span>
+      @if (beginnerLessons().length > 0) {
+        <div class="level-section">
+          <h2 class="level-title beginner">Beginner Level</h2>
+          <div class="lessons-grid" [@staggerLessons]="beginnerLessons().length">
+            @for (lesson of beginnerLessons(); track lesson.id; let i = $index) {
+              <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
+                <div class="lesson-number" [style.background]="getCategoryColor(lesson.id)">{{ i + 1 }}</div>
+                <div class="lesson-info">
+                  <h3>{{ lesson.title }}</h3>
+                  <p>{{ lesson.description }}</p>
+                  <div class="lesson-meta">
+                    <span>{{ lesson.duration }}</span>
+                    <span>{{ lesson.topics.length }} topics</span>
+                  </div>
                 </div>
-              </div>
-              @if (progressService.isLessonCompleted(lesson.id)) {
-                <span class="completed-badge">✓</span>
-              }
-            </a>
-          }
+                @if (progressService.isLessonCompleted(lesson.id)) {
+                  <span class="completed-badge">✓</span>
+                }
+              </a>
+            }
+          </div>
         </div>
-      </div>
+      }
 
-      <div class="level-section">
-        <h2 class="level-title advanced">🔴 Advanced Level</h2>
-        <div class="lessons-grid">
-          @for (lesson of advancedLessons(); track lesson.id) {
-            <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
-              <div class="lesson-number">{{ lesson.id }}</div>
-              <div class="lesson-info">
-                <h3>{{ lesson.title }}</h3>
-                <p>{{ lesson.description }}</p>
-                <div class="lesson-meta">
-                  <span>⏱ {{ lesson.duration }}</span>
-                  <span>📚 {{ lesson.topics.length }} topics</span>
+      @if (intermediateLessons().length > 0) {
+        <div class="level-section">
+          <h2 class="level-title intermediate">Intermediate Level</h2>
+          <div class="lessons-grid" [@staggerLessons]="intermediateLessons().length">
+            @for (lesson of intermediateLessons(); track lesson.id; let i = $index) {
+              <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
+                <div class="lesson-number" [style.background]="getCategoryColor(lesson.id)">{{ i + 1 }}</div>
+                <div class="lesson-info">
+                  <h3>{{ lesson.title }}</h3>
+                  <p>{{ lesson.description }}</p>
+                  <div class="lesson-meta">
+                    <span>{{ lesson.duration }}</span>
+                    <span>{{ lesson.topics.length }} topics</span>
+                  </div>
                 </div>
-              </div>
-              @if (progressService.isLessonCompleted(lesson.id)) {
-                <span class="completed-badge">✓</span>
-              }
-            </a>
-          }
+                @if (progressService.isLessonCompleted(lesson.id)) {
+                  <span class="completed-badge">✓</span>
+                }
+              </a>
+            }
+          </div>
         </div>
-      </div>
+      }
+
+      @if (advancedLessons().length > 0) {
+        <div class="level-section">
+          <h2 class="level-title advanced">Advanced Level</h2>
+          <div class="lessons-grid" [@staggerLessons]="advancedLessons().length">
+            @for (lesson of advancedLessons(); track lesson.id; let i = $index) {
+              <a [routerLink]="['/lesson', lesson.id]" class="lesson-card">
+                <div class="lesson-number" [style.background]="getCategoryColor(lesson.id)">{{ i + 1 }}</div>
+                <div class="lesson-info">
+                  <h3>{{ lesson.title }}</h3>
+                  <p>{{ lesson.description }}</p>
+                  <div class="lesson-meta">
+                    <span>{{ lesson.duration }}</span>
+                    <span>{{ lesson.topics.length }} topics</span>
+                  </div>
+                </div>
+                @if (progressService.isLessonCompleted(lesson.id)) {
+                  <span class="completed-badge">✓</span>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (beginnerLessons().length === 0 && intermediateLessons().length === 0 && advancedLessons().length === 0) {
+        <div class="empty-state">
+          <p>No lessons available for this category yet.</p>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -109,138 +164,168 @@ import { ProgressService } from '../../../core/services/progress.service';
     }
     .lessons-header {
       text-align: center;
-      margin-bottom: 60px;
+      margin-bottom: 48px;
     }
     .lessons-header h1 {
-      font-size: 42px;
-      margin: 0 0 12px;
-      color: #1a1a1a;
+      font-size: 36px;
+      margin: 0 0 8px;
+      color: var(--text-primary);
     }
     .lessons-header p {
-      font-size: 18px;
-      color: #666;
+      font-size: 16px;
+      color: var(--text-secondary);
       margin: 0 0 24px;
     }
     .category-tabs {
       display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
       justify-content: center;
-      gap: 12px;
       flex-wrap: wrap;
     }
     .category-tab {
-      padding: 12px 24px;
-      border: 2px solid #e0e0e0;
-      border-radius: 24px;
-      background: white;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 20px;
+      background: var(--bg-primary);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 500;
       transition: all 0.2s;
+      white-space: nowrap;
+      color: var(--text-secondary);
     }
     .category-tab:hover {
-      border-color: #dd0031;
-      color: #dd0031;
+      border-color: var(--cat-color);
+      color: var(--cat-color);
     }
-    .category-tab.active.angular {
-      background: #dd0031;
-      border-color: #dd0031;
+    .category-tab.active {
+      background: var(--cat-color);
+      border-color: var(--cat-color);
       color: white;
     }
-    .category-tab.active.javascript {
-      background: #f7df1e;
-      border-color: #f7df1e;
-      color: #1a1a1a;
-    }
-    .category-tab.active.typescript {
-      background: #3178c6;
-      border-color: #3178c6;
-      color: white;
+    .tab-icon {
+      font-size: 14px;
     }
     .level-section {
-      margin-bottom: 60px;
+      margin-bottom: 48px;
     }
     .level-title {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 24px;
-      margin-bottom: 24px;
+      gap: 8px;
+      font-size: 20px;
+      margin-bottom: 20px;
       padding-bottom: 12px;
-      border-bottom: 2px solid #eee;
+      border-bottom: 2px solid var(--border-color);
+      color: var(--text-primary);
     }
+    .level-title.beginner { color: #22c55e; border-bottom-color: #22c55e; }
+    .level-title.intermediate { color: #f97316; border-bottom-color: #f97316; }
+    .level-title.advanced { color: #ef4444; border-bottom-color: #ef4444; }
+    .level-title.bookmarked { color: var(--accent); border-bottom-color: var(--accent); }
     .lessons-grid {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
     .lesson-card {
       display: flex;
       align-items: center;
-      gap: 20px;
-      padding: 24px;
-      background: white;
+      gap: 16px;
+      padding: 20px;
+      background: var(--bg-primary);
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow: var(--shadow-sm);
       text-decoration: none;
       transition: all 0.2s;
       position: relative;
+      border: 1px solid var(--border-color);
     }
     .lesson-card:hover {
-      transform: translateX(8px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
     }
     .lesson-number {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #dd0031, #c3002f);
+      width: 40px;
+      height: 40px;
       color: white;
-      border-radius: 50%;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 20px;
+      font-size: 14px;
       flex-shrink: 0;
     }
     .lesson-info {
       flex: 1;
+      min-width: 0;
     }
     .lesson-info h3 {
-      margin: 0 0 8px;
-      color: #1a1a1a;
-      font-size: 20px;
+      margin: 0 0 4px;
+      color: var(--text-primary);
+      font-size: 16px;
     }
     .lesson-info p {
-      margin: 0 0 12px;
-      color: #666;
-      line-height: 1.5;
+      margin: 0 0 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .lesson-meta {
       display: flex;
-      gap: 16px;
-      color: #888;
-      font-size: 14px;
+      gap: 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
     }
+    .level-badge {
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .level-badge.beginner { background: #dcfce7; color: #166534; }
+    .level-badge.intermediate { background: #fed7aa; color: #9a3412; }
+    .level-badge.advanced { background: #fecaca; color: #991b1b; }
     .completed-badge {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 32px;
-      height: 32px;
-      background: #4caf50;
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      background: #22c55e;
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
+      font-size: 14px;
     }
-    :host-context(.dark-theme) {
-      .lessons-header h1, .lesson-info h3 { color: #fff; }
-      .lessons-header p { color: #aaa; }
-      .lesson-card { background: #2a2a2a; }
-      .level-title { border-bottom-color: #444; }
-      .category-tab { background: #333; border-color: #555; color: #fff; }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 768px) {
+      .category-tabs {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+      }
+      .lessons-header h1 {
+        font-size: 28px;
+      }
     }
   `]
 })
@@ -252,32 +337,90 @@ export class LessonsListComponent implements OnInit {
 
   activeCategory = signal<LessonCategory>('angular');
 
-  pageTitle = computed(() => {
-    const titles: Record<LessonCategory, string> = {
-      angular: 'Angular Learning Path',
-      javascript: 'JavaScript Mastery',
-      typescript: 'TypeScript Mastery'
-    };
-    return titles[this.activeCategory()];
-  });
+  categories: CategoryInfo[] = [
+    { id: 'angular', label: 'Angular', icon: '🅰️', color: '#dd0031' },
+    { id: 'javascript', label: 'JavaScript', icon: '📜', color: '#f7df1e' },
+    { id: 'typescript', label: 'TypeScript', icon: '🔷', color: '#3178c6' },
+    { id: 'react', label: 'React', icon: '⚛️', color: '#61dafb' },
+    { id: 'vue', label: 'Vue', icon: '💚', color: '#42b883' },
+    { id: 'html-css', label: 'HTML & CSS', icon: '🎨', color: '#e44d26' },
+    { id: 'system-design', label: 'System Design', icon: '🏗️', color: '#8b5cf6' },
+    { id: 'database', label: 'Databases', icon: '🗄️', color: '#06b6d4' },
+    { id: 'networking', label: 'Networking', icon: '🌐', color: '#10b981' },
+    { id: 'browser', label: 'Browser', icon: '🌍', color: '#f59e0b' },
+    { id: 'design-systems', label: 'Design Systems', icon: '🎯', color: '#ec4899' },
+    { id: 'dsa-frontend', label: 'DSA', icon: '🧮', color: '#6366f1' },
+    { id: 'soft-skills', label: 'Soft Skills', icon: '🤝', color: '#14b8a6' },
+    { id: 'performance', label: 'Performance', icon: '⚡', color: '#f97316' },
+    { id: 'testing', label: 'Testing', icon: '🧪', color: '#22c55e' },
+    { id: 'tooling', label: 'Tooling', icon: '🔧', color: '#64748b' },
+  ];
 
-  pageDescription = computed(() => {
-    const descriptions: Record<LessonCategory, string> = {
-      angular: 'Master Angular from beginner to advanced with comprehensive lessons',
-      javascript: 'Master JavaScript from fundamentals to advanced patterns',
-      typescript: 'Master TypeScript from basics to type-level programming'
-    };
-    return descriptions[this.activeCategory()];
-  });
+  private titles: Record<LessonCategory, string> = {
+    angular: 'Angular Learning Path',
+    javascript: 'JavaScript Mastery',
+    typescript: 'TypeScript Mastery',
+    'html-css': 'HTML & CSS Mastery',
+    react: 'React Learning Path',
+    vue: 'Vue Learning Path',
+    tooling: 'Developer Tooling',
+    performance: 'Performance Optimization',
+    testing: 'Testing Mastery',
+    'system-design': 'System Design',
+    database: 'Databases (MySQL & PostgreSQL)',
+    networking: 'Networking & APIs',
+    browser: 'Browser Internals',
+    'design-systems': 'Design Systems',
+    'dsa-frontend': 'DSA for Frontend',
+    'soft-skills': 'Soft Skills & Leadership',
+    security: 'Web Security'
+  };
+
+  private descriptions: Record<LessonCategory, string> = {
+    angular: 'Master Angular from beginner to advanced with comprehensive lessons',
+    javascript: 'Master JavaScript from fundamentals to advanced patterns',
+    typescript: 'Master TypeScript from basics to type-level programming',
+    'html-css': 'Master HTML & CSS from semantic markup to modern layouts',
+    react: 'Master React from fundamentals to advanced patterns',
+    vue: 'Master Vue from basics to composition API',
+    tooling: 'Master developer tools for efficient workflows',
+    performance: 'Optimize applications for speed and efficiency',
+    testing: 'Master testing strategies for reliable applications',
+    'system-design': 'Learn frontend system design and architecture patterns',
+    database: 'Master SQL, MySQL, PostgreSQL and database integration',
+    networking: 'Master HTTP, REST, GraphQL, WebSockets and security',
+    browser: 'Understand browser internals, rendering, and Web APIs',
+    'design-systems': 'Build and maintain scalable design systems',
+    'dsa-frontend': 'Data structures and algorithms for frontend interviews',
+    'soft-skills': 'Engineering leadership and communication skills',
+    security: 'Master web security: XSS, CSRF, CSP, authentication, and OWASP'
+  };
+
+  pageTitle = computed(() => this.titles[this.activeCategory()]);
+  pageDescription = computed(() => this.descriptions[this.activeCategory()]);
 
   beginnerLessons = computed(() => this.lessonService.getLessonsByLevel('beginner', this.activeCategory()));
   intermediateLessons = computed(() => this.lessonService.getLessonsByLevel('intermediate', this.activeCategory()));
   advancedLessons = computed(() => this.lessonService.getLessonsByLevel('advanced', this.activeCategory()));
 
+  bookmarkedLessons = computed(() => {
+    const bookmarkIds = this.progressService.getBookmarkedLessons();
+    return bookmarkIds
+      .map(id => this.lessonService.getLesson(id))
+      .filter((l): l is NonNullable<typeof l> => l != null)
+      .filter(l => this.lessonService.getLessonCategory(l.id) === this.activeCategory());
+  });
+
+  getCategoryColor(lessonId: number): string {
+    const category = this.lessonService.getLessonCategory(lessonId);
+    return this.categories.find(c => c.id === category)?.color || '#64748b';
+  }
+
   ngOnInit() {
     this.route.params.subscribe(params => {
-      if (params['category'] && ['angular', 'javascript', 'typescript'].includes(params['category'])) {
-        this.activeCategory.set(params['category'] as LessonCategory);
+      const cat = params['category'] as LessonCategory;
+      if (cat && this.categories.some(c => c.id === cat)) {
+        this.activeCategory.set(cat);
       }
     });
   }

@@ -57,7 +57,7 @@ import { Component, signal, computed } from '@angular/core';
       gap: 24px;
     }
     .concept-card {
-      height: 280px;
+      height: 320px;
       perspective: 1000px;
       cursor: pointer;
     }
@@ -81,9 +81,10 @@ import { Component, signal, computed } from '@angular/core';
       transform: rotateY(-180deg);
     }
     .card-back {
-      background: white;
+      background: var(--bg-primary);
       border: 1px solid var(--border-color);
       transform: rotateY(180deg);
+      overflow-y: auto;
     }
     .concept-card.flipped .card-back {
       transform: rotateY(0deg);
@@ -118,18 +119,33 @@ import { Component, signal, computed } from '@angular/core';
       background: #1e1e1e;
       border-radius: 8px;
       overflow: hidden;
+      min-height: 120px;
     }
     .card-code pre {
       margin: 0;
-      padding: 12px;
+      padding: 14px;
       overflow: auto;
       height: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: #555 #1e1e1e;
+    }
+    .card-code pre::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .card-code pre::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+    .card-code pre::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 3px;
     }
     .card-code code {
       color: #d4d4d4;
-      font-size: 12px;
-      font-family: 'SF Mono', monospace;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
       line-height: 1.5;
+      white-space: pre;
     }
     .flip-hint {
       font-size: 12px;

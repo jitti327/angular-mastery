@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SearchService } from '../../../core/services/search.service';
+import { MobileMenuService } from '../../../core/services/mobile-menu.service';
 
 @Component({
   selector: 'app-header',
@@ -185,6 +186,7 @@ import { SearchService } from '../../../core/services/search.service';
 export class HeaderComponent {
   themeService = inject(ThemeService);
   searchService = inject(SearchService);
+  private mobileMenuService = inject(MobileMenuService);
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
@@ -195,6 +197,14 @@ export class HeaderComponent {
   }
 
   toggleMobileMenu(): void {
-    // Will be connected to sidebar
+    this.mobileMenuService.toggle();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      event.preventDefault();
+      this.searchService.openSearch();
+    }
   }
 }

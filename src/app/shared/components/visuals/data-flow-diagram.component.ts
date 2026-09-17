@@ -171,7 +171,7 @@ import { Component, signal } from '@angular/core';
   `,
   styles: [`
     .flow-container {
-      background: white;
+      background: var(--bg-primary);
       border-radius: 16px;
       padding: 32px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.08);
@@ -184,11 +184,11 @@ import { Component, signal } from '@angular/core';
     .flow-header h2 {
       margin: 0 0 8px;
       font-size: 28px;
-      color: #1a1a1a;
+      color: var(--text-primary);
     }
     .flow-header p {
       margin: 0;
-      color: #666;
+      color: var(--text-secondary);
     }
     .flow-tabs {
       display: flex;
@@ -198,8 +198,8 @@ import { Component, signal } from '@angular/core';
     }
     .flow-tabs button {
       padding: 12px 24px;
-      border: 2px solid #e0e0e0;
-      background: white;
+      border: 2px solid var(--border-color);
+      background: var(--bg-primary);
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
@@ -216,7 +216,7 @@ import { Component, signal } from '@angular/core';
       color: white;
     }
     .flow-visual {
-      background: #f9f9f9;
+      background: var(--bg-secondary);
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 24px;
@@ -261,12 +261,12 @@ import { Component, signal } from '@angular/core';
     }
     .section-label {
       font-size: 12px;
-      fill: #666;
+      fill: var(--text-secondary);
       font-weight: 500;
     }
     .signal-label {
       font-size: 10px;
-      fill: #666;
+      fill: var(--text-secondary);
     }
     .animated-arrow line {
       stroke-dasharray: 8 4;
@@ -318,19 +318,19 @@ import { Component, signal } from '@angular/core';
       gap: 16px;
     }
     .info-card {
-      background: #f5f5f7;
+      background: var(--bg-secondary);
       padding: 20px;
       border-radius: 12px;
     }
     .info-card h4 {
       margin: 0 0 8px;
-      color: #1a1a1a;
+      color: var(--text-primary);
       font-size: 16px;
     }
     .info-card p {
       margin: 0;
       font-size: 14px;
-      color: #666;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 

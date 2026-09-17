@@ -1,16 +1,23 @@
-import { Component, inject, computed, signal, HostListener } from '@angular/core';
+import { Component, inject, computed, signal, HostListener, AfterViewChecked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LessonService } from '../../../core/services/lesson.service';
 import { ProgressService } from '../../../core/services/progress.service';
 import { CodeViewerComponent } from '../../../shared/components/code-viewer/code-viewer.component';
 import { QuizComponent } from '../../../shared/components/quiz/quiz.component';
+import { DiagramViewerComponent } from '../../../shared/components/diagram-viewer/diagram-viewer.component';
+import { CodePlaygroundComponent } from '../../../shared/components/code-playground/code-playground.component';
+import { TerminalComponent } from '../../../shared/components/terminal/terminal.component';
 import { map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup';
 
 @Component({
   selector: 'app-lesson-page',
   standalone: true,
-  imports: [RouterLink, CodeViewerComponent, QuizComponent],
+  imports: [RouterLink, CodeViewerComponent, QuizComponent, DiagramViewerComponent, CodePlaygroundComponent, TerminalComponent],
   template: `
     @if (lesson(); as lesson) {
       <div class="lesson-layout">
@@ -72,6 +79,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
                   In Progress
                 }
               </span>
+              <button class="print-btn" (click)="printLesson()" title="Print or save as PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print
+              </button>
             </div>
           </header>
 
@@ -103,9 +114,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
                 }
 
                 @if (topic.diagram) {
-                  <div class="diagram-placeholder">
-                    <p>📊 Interactive diagram: {{ topic.diagram.title }}</p>
-                  </div>
+                  <app-diagram-viewer
+                    [title]="topic.diagram!.title"
+                    [nodes]="topic.diagram!.nodes"
+                    [edges]="topic.diagram!.edges" />
                 }
               </section>
             }
@@ -117,6 +129,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
                 [questions]="quizQuestions()"
                 (quizComplete)="onQuizComplete($event)" />
             }
+          </div>
+
+          <div class="lesson-playground">
+            <h2>Try it yourself</h2>
+            <p>Experiment with the code from this lesson right here in your browser.</p>
+            <app-code-playground />
+          </div>
+
+          <div class="lesson-terminal">
+            <h2>Terminal</h2>
+            <p>Run common frontend commands in the simulated terminal below.</p>
+            <app-terminal />
           </div>
 
           <footer class="lesson-footer">
@@ -137,6 +161,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
                 Mark Complete
               }
             </button>
+            <button class="bookmark-btn" (click)="toggleBookmark()" [class.bookmarked]="isBookmarked()" title="Bookmark this lesson">
+              @if (isBookmarked()) {
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                Bookmarked
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                Bookmark
+              }
+            </button>
             @if (nextLesson(); as next) {
               <a [routerLink]="['/lesson', next.id]" class="nav-btn next">
                 <span class="nav-direction">Next</span>
@@ -149,11 +182,38 @@ import { toSignal } from '@angular/core/rxjs-interop';
         </div>
       </div>
     } @else {
-      <div class="not-found">
-        <span class="not-found-icon">📭</span>
-        <h2>Lesson not found</h2>
-        <p>The lesson you're looking for doesn't exist.</p>
-        <a routerLink="/lessons" class="back-btn">← Back to Lessons</a>
+      <div class="lesson-skeleton">
+        <div class="skeleton-breadcrumb">
+          <div class="skeleton" style="width: 40px; height: 14px;"></div>
+          <div class="skeleton" style="width: 12px; height: 14px;"></div>
+          <div class="skeleton" style="width: 100px; height: 14px;"></div>
+          <div class="skeleton" style="width: 12px; height: 14px;"></div>
+          <div class="skeleton" style="width: 180px; height: 14px;"></div>
+        </div>
+        <div class="skeleton-badges">
+          <div class="skeleton" style="width: 80px; height: 28px; border-radius: 20px;"></div>
+          <div class="skeleton" style="width: 120px; height: 14px;"></div>
+        </div>
+        <div class="skeleton" style="width: 80%; height: 40px; margin-bottom: 16px;"></div>
+        <div class="skeleton" style="width: 100%; height: 18px; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="width: 70%; height: 18px; margin-bottom: 24px;"></div>
+        <div class="skeleton-meta">
+          <div class="skeleton" style="width: 80px; height: 14px;"></div>
+          <div class="skeleton" style="width: 80px; height: 14px;"></div>
+          <div class="skeleton" style="width: 100px; height: 14px;"></div>
+        </div>
+        <div class="skeleton-topics">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="skeleton-topic">
+              <div class="skeleton" style="width: 40px; height: 40px; border-radius: 10px;"></div>
+              <div class="skeleton" style="width: 60%; height: 24px;"></div>
+            </div>
+            <div class="skeleton" style="width: 100%; height: 14px;"></div>
+            <div class="skeleton" style="width: 95%; height: 14px;"></div>
+            <div class="skeleton" style="width: 85%; height: 14px;"></div>
+            <div class="skeleton" style="width: 100%; height: 160px; border-radius: 12px;"></div>
+          }
+        </div>
       </div>
     }
   `,
@@ -306,6 +366,26 @@ import { toSignal } from '@angular/core/rxjs-interop';
     }
     .meta-item svg { width: 16px; height: 16px; }
     .meta-item.completed { color: var(--success); }
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .print-btn svg { width: 14px; height: 14px; }
+    .print-btn:hover {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
     .lesson-objectives {
       background: var(--bg-secondary);
       padding: 24px 28px;
@@ -369,13 +449,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
         color: var(--accent);
       }
       pre {
-        background: var(--code-bg);
-        color: var(--code-text);
         padding: 20px;
         border-radius: 12px;
         overflow-x: auto;
         margin: 20px 0;
         border: 1px solid var(--border-color);
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        font-size: 14px;
+        color: inherit;
       }
     }
     .diagram-placeholder {
@@ -388,6 +473,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
       color: var(--text-secondary);
     }
     .lesson-quiz { margin: 48px 0; }
+    .lesson-playground, .lesson-terminal {
+      margin: 48px 0;
+    }
+    .lesson-playground h2, .lesson-terminal h2 {
+      font-size: 24px;
+      margin: 0 0 8px;
+      color: var(--text-primary);
+    }
+    .lesson-playground p, .lesson-terminal p {
+      margin: 0 0 16px;
+      color: var(--text-secondary);
+    }
     .lesson-footer {
       display: flex;
       justify-content: space-between;
@@ -458,6 +555,31 @@ import { toSignal } from '@angular/core/rxjs-interop';
       color: white;
       border-color: var(--success);
     }
+    .bookmark-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bookmark-btn svg { width: 18px; height: 18px; }
+    .bookmark-btn:hover {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .bookmark-btn.bookmarked {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
     .not-found {
       text-align: center;
       padding: 120px 24px;
@@ -474,6 +596,38 @@ import { toSignal } from '@angular/core/rxjs-interop';
       text-decoration: none;
       font-weight: 600;
     }
+    .lesson-skeleton {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 48px;
+    }
+    .skeleton-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .skeleton-badges {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .skeleton-meta {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .skeleton-topics {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .skeleton-topic {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
     @media (max-width: 1200px) {
       .lesson-sidebar { display: none; }
@@ -486,10 +640,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
     }
   `]
 })
-export class LessonPageComponent {
+export class LessonPageComponent implements AfterViewChecked {
   private route = inject(ActivatedRoute);
   private lessonService = inject(LessonService);
   private progressService = inject(ProgressService);
+  private needsHighlight = false;
 
   activeSection = signal('');
   readingProgress = signal(0);
@@ -512,9 +667,23 @@ export class LessonPageComponent {
     const labels: Record<string, string> = {
       angular: 'Angular',
       javascript: 'JavaScript',
-      typescript: 'TypeScript'
+      typescript: 'TypeScript',
+      'html-css': 'HTML & CSS',
+      react: 'React',
+      vue: 'Vue',
+      tooling: 'Tooling',
+      performance: 'Performance',
+      testing: 'Testing',
+      'system-design': 'System Design',
+      database: 'Database',
+      networking: 'Networking',
+      browser: 'Browser',
+      'design-systems': 'Design Systems',
+      'dsa-frontend': 'DSA',
+      'soft-skills': 'Soft Skills',
+      security: 'Security'
     };
-    return labels[this.lessonCategory()];
+    return labels[this.lessonCategory()] || 'Lessons';
   });
 
   lessonIndex = computed(() => {
@@ -542,6 +711,11 @@ export class LessonPageComponent {
     return l ? this.progressService.isLessonCompleted(l.id) : false;
   });
 
+  isBookmarked = computed(() => {
+    const l = this.lesson();
+    return l ? this.progressService.isBookmarked(l.id) : false;
+  });
+
   quizQuestions = computed(() => {
     const l = this.lesson();
     if (!l) return [];
@@ -551,6 +725,13 @@ export class LessonPageComponent {
   constructor() {
     if (typeof window !== 'undefined') {
       this.updateReadingProgress();
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.needsHighlight) {
+      this.needsHighlight = false;
+      Prism.highlightAll();
     }
   }
 
@@ -589,18 +770,52 @@ export class LessonPageComponent {
   }
 
   formatContent(content: string): string {
-    return content
+    const codeBlocks: string[] = [];
+    let processed = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
+      const language = lang || 'typescript';
+      const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<pre><code class="language-${language}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`);
+      return placeholder;
+    });
+
+    processed = processed
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\n- /g, '<br>• ')
-      .replace(/\n\n/g, '<br><br>')
-      .replace(/\n(\d+)\. /g, '<br>$1. ');
+      .replace(/\n- /g, '\n• ')
+      .replace(/\n(\d+)\. /g, '\n$1. ');
+
+    const paragraphs = processed.split(/\n\n+/);
+    processed = paragraphs.map(p => {
+      if (p.includes('__CODE_BLOCK_')) return p;
+      if (p.startsWith('•') || p.match(/^\d+\./) || p.startsWith('<code>')) {
+        return `<div class="content-block">${p.replace(/\n/g, '<br>')}</div>`;
+      }
+      return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+
+    codeBlocks.forEach((block, i) => {
+      processed = processed.replace(`__CODE_BLOCK_${i}__`, block);
+    });
+
+    this.needsHighlight = true;
+    return processed;
+  }
+
+  printLesson(): void {
+    window.print();
   }
 
   markComplete(): void {
     const l = this.lesson();
     if (l) {
       this.progressService.completeLesson(l.id);
+    }
+  }
+
+  toggleBookmark(): void {
+    const l = this.lesson();
+    if (l) {
+      this.progressService.toggleBookmark(l.id);
     }
   }
 

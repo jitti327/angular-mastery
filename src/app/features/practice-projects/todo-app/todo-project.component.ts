@@ -1,5 +1,6 @@
 import { Component, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 interface Todo {
   id: number;
@@ -10,7 +11,7 @@ interface Todo {
 @Component({
   selector: 'app-todo-project',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <div class="project-container">
       <header class="project-header">

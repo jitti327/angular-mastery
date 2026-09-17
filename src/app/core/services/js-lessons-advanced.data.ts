@@ -7,9 +7,180 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '35 min',
     objectives: ['Optimize loops', 'Use memoization', 'Implement lazy loading'],
     topics: [
-      { id: 'loops', title: 'Loop Optimization', content: `**Practice:**\n\`\`\`javascript\n// Slow - forEach\narr.forEach(item => process(item));\n\n// Fast - for loop\nfor (let i = 0; i < arr.length; i++) {\n  process(arr[i]);\n}\n\n// Fast - for...of\nfor (const item of arr) {\n  process(item);\n}\n\n// Avoid creating functions in loops\n// BAD\nfor (let i = 0; i < 1000; i++) {\n  arr.push(() => i);\n}\n\n// GOOD\nconst createFn = (i) => () => i;\nfor (let i = 0; i < 1000; i++) {\n  arr.push(createFn(i));\n}\n\`\`\`` },
-      { id: 'memoization', title: 'Memoization', content: `**Practice:**\n\`\`\`javascript\nfunction memoize(fn) {\n  const cache = new Map();\n  return function(...args) {\n    const key = JSON.stringify(args);\n    if (cache.has(key)) {\n      return cache.get(key);\n    }\n    const result = fn.apply(this, args);\n    cache.set(key, result);\n    return result;\n  };\n}\n\n// Usage\nconst expensiveCalc = memoize((n) => {\n  console.log("Computing...");\n  return n * n;\n});\n\nexpensiveCalc(4); // Computing... 16\nexpensiveCalc(4); // 16 (cached)\n\`\`\`` },
-      { id: 'lazy-loading', title: 'Lazy Loading', content: `**Practice:**\n\`\`\`javascript\n// Lazy load images\nconst lazyImages = document.querySelectorAll("img[data-src]");\nconst imageObserver = new IntersectionObserver((entries) => {\n  entries.forEach(entry => {\n    if (entry.isIntersecting) {\n      const img = entry.target;\n      img.src = img.dataset.src;\n      imageObserver.unobserve(img);\n    }\n  });\n});\n\nlazyImages.forEach(img => imageObserver.observe(img));\n\n// Lazy load components\ndefer(() => import("./heavy-component.js"));\n\`\`\`` }
+      { id: 'loops', title: 'Loop Optimization', content: `**What is Loop Optimization?**
+
+Loop optimization involves choosing the right loop construct and avoiding patterns that waste memory or slow execution.
+
+**Why Loop Optimization Matters:**
+- Loops are often the hottest code paths
+- Creating functions/objects in loops wastes memory
+- Choosing the right loop can be 2-10x faster
+- Critical for processing large datasets
+
+**Code Example:**
+\`\`\`javascript
+const arr = new Array(10000).fill(0);
+
+// Slowest — forEach with callback overhead
+arr.forEach((item, i) => process(item));
+
+// Fast — traditional for loop
+for (let i = 0; i < arr.length; i++) {
+  process(arr[i]);
+}
+
+// Fast — for...of
+for (const item of arr) {
+  process(item);
+}
+
+// BAD — creating functions in loops
+for (let i = 0; i < 1000; i++) {
+  arr.push(() => i);
+}
+
+// GOOD — factory function
+const createFn = (i) => () => i;
+for (let i = 0; i < 1000; i++) {
+  arr.push(createFn(i));
+}
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// filter().length instead of loop
+const count = arr.filter(x => x > 5).length; // Creates array!
+// Fix: Simple counter
+let count = 0;
+for (const x of arr) { if (x > 5) count++; }
+
+// for...in on arrays
+for (const key in arr) {} // Slow — iterates prototypes
+// Fix: Use for...of
+\`\`\`
+
+**Best Practices:**
+- Use \`for\` for max performance, \`for...of\` for readability
+- Avoid creating functions inside hot loops
+- Use Map/Set for O(1) lookups
+- Profile first — measure before optimizing
+
+**Key Takeaways:**
+1. Traditional for loops are fastest
+2. Never create functions inside hot loops
+3. Profile before optimizing` },
+      { id: 'memoization', title: 'Memoization', content: `**What is Memoization?**
+
+Memoization caches results of expensive function calls. When the same inputs occur again, the cached result is returned.
+
+**Why Memoization Matters:**
+- Eliminates redundant computations
+- Dramatically speeds up recursive algorithms
+- Used in React's useMemo, lodash's memoize
+
+**Code Example:**
+\`\`\`javascript
+function memoize(fn) {
+  const cache = new Map();
+  return function(...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+const expensiveCalc = memoize((n) => {
+  console.log("Computing...");
+  return n * n;
+});
+
+expensiveCalc(4); // Computing... 16
+expensiveCalc(4); // 16 (cached)
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Memoizing side-effect functions
+const memoized = memoize((url) => fetch(url)); // Bad!
+// Fix: Only memoize pure functions
+
+// Unbounded cache
+const cache = new Map(); // Grows forever!
+// Fix: Add size limit (LRU cache)
+\`\`\`
+
+**Best Practices:**
+- Only memoize pure functions
+- Use Map for cache
+- Set cache size limits
+- Measure first — memoize expensive computations
+
+**Key Takeaways:**
+1. Memoization caches results to avoid redundant computation
+2. Only use with pure functions
+3. Set cache size limits to prevent memory leaks` },
+      { id: 'lazy-loading', title: 'Lazy Loading', content: `**What is Lazy Loading?**
+
+Lazy loading defers loading of non-critical resources until needed. This reduces initial load time.
+
+**Why Lazy Loading Matters:**
+- Reduces initial bundle size
+- Improves Time to Interactive
+- Saves bandwidth
+- Essential for large single-page applications
+
+**Code Example:**
+\`\`\`javascript
+// Lazy load images with IntersectionObserver
+const lazyImages = document.querySelectorAll("img[data-src]");
+const imageObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;
+      imageObserver.unobserve(img);
+    }
+  });
+}, { rootMargin: "200px" });
+
+lazyImages.forEach(img => imageObserver.observe(img));
+
+// Lazy load components
+async function loadRoute(route) {
+  const { default: Component } = await import(\`./pages/\${route}.js\`);
+  return new Component();
+}
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Not showing loading state
+button.addEventListener('click', async () => {
+  const { Chart } = await import('./chart.js');
+  // User sees nothing while loading!
+});
+// Fix: Show loading indicator
+
+// Not handling errors
+try {
+  const module = await import('./module.js');
+} catch (error) {
+  showError("Failed to load component");
+}
+\`\`\`
+
+**Best Practices:**
+- Lazy load routes, heavy components, below-the-fold images
+- Always show loading states
+- Handle errors gracefully
+- Preload critical lazy resources
+
+**Key Takeaways:**
+1. Lazy loading defers non-critical resources
+2. Always show loading states and handle errors
+3. Use IntersectionObserver for viewport-based loading` }
     ],
     quiz: [
       {
@@ -41,9 +212,145 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '35 min',
     objectives: ['Use Web Workers', 'Implement message passing', 'Handle concurrency'],
     topics: [
-      { id: 'web-workers', title: 'Web Workers', content: `**Practice:**\n\`\`\`javascript\n// worker.js\nself.onmessage = (event) => {\n  const { data } = event;\n  const result = heavyComputation(data);\n  self.postMessage(result);\n};\n\n// main.js\nconst worker = new Worker("worker.js");\nworker.postMessage(data);\nworker.onmessage = (event) => {\n  console.log("Result:", event.data);\n};\n\`\`\`` },
-      { id: 'shared-array-buffer', title: 'SharedArrayBuffer', content: `**Practice:**\n\`\`\`javascript\n// Shared memory between workers\nconst buffer = new SharedArrayBuffer(1024);\nconst arr = new Int32Array(buffer);\n\nworker1.postMessage(buffer);\nworker2.postMessage(buffer);\n\n// Atomics for synchronization\nAtomics.add(arr, 0, 1);\nAtomics.load(arr, 0);\n\`\`\`` },
-      { id: 'async-iteration', title: 'Async Iteration', content: `**Practice:**\n\`\`\`javascript\n// Async generator\nasync function* fetchPages(url) {\n  let page = 1;\n  while (true) {\n    const response = await fetch(\`\${url}?page=\${page}\`);\n    const data = await response.json();\n    if (data.length === 0) break;\n    yield data;\n    page++;\n  }\n}\n\n// Usage\nfor await (const page of fetchPages("https://api.example.com/items")) {\n  console.log(page);\n}\n\`\`\`` }
+      { id: 'web-workers', title: 'Web Workers', content: `**What are Web Workers?**
+
+Web Workers run JavaScript in a separate background thread, preventing heavy computation from blocking the main UI thread.
+
+**Why Web Workers Matter:**
+- Keep UI responsive during heavy computation
+- Enable true parallelism
+- Prevent main thread freezing
+- Essential for data processing and image manipulation
+
+**Code Example:**
+\`\`\`javascript
+// worker.js
+self.onmessage = (event) => {
+  const result = heavyComputation(event.data);
+  self.postMessage(result);
+};
+
+// main.js
+const worker = new Worker("worker.js");
+worker.postMessage([1, 2, 3, 4, 5]);
+worker.onmessage = (event) => {
+  console.log("Result:", event.data);
+};
+worker.onerror = (error) => {
+  console.error("Worker error:", error.message);
+};
+
+// Transfer data efficiently
+const buffer = new ArrayBuffer(1024 * 1024);
+worker.postMessage(buffer, [buffer]); // Transfers ownership
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Trying to access DOM from worker
+document.getElementById("app"); // Error!
+
+// Not handling errors
+const worker = new Worker("worker.js");
+// No error handler!
+
+// Not terminating workers
+worker.terminate(); // Always clean up
+\`\`\`
+
+**Best Practices:**
+- Use for CPU-intensive tasks
+- Always handle errors
+- Use Transferable objects for large data
+- Terminate workers when done
+
+**Key Takeaways:**
+1. Web Workers run in separate threads — no DOM access
+2. Communication via message passing
+3. Always terminate workers and handle errors` },
+      { id: 'shared-array-buffer', title: 'SharedArrayBuffer', content: `**What is SharedArrayBuffer?**
+
+SharedArrayBuffer enables shared memory between threads. Atomics provides synchronization for safe concurrent access.
+
+**Why SharedArrayBuffer Matters:**
+- Zero-copy sharing between threads
+- Synchronization with Atomics
+- Used in WebAssembly and real-time applications
+
+**Code Example:**
+\`\`\`javascript
+const buffer = new SharedArrayBuffer(1024);
+const arr = new Int32Array(buffer);
+
+worker1.postMessage(buffer);
+worker2.postMessage(buffer);
+
+Atomics.add(arr, 0, 1);
+Atomics.load(arr, 0);
+Atomics.store(arr, 0, 42);
+Atomics.wait(arr, 0, 0);
+Atomics.notify(arr, 0, 1);
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+arr[0] = arr[0] + 1; // Race condition!
+// Fix: Use Atomics
+Atomics.add(arr, 0, 1);
+\`\`\`
+
+**Best Practices:**
+- Use only when message passing is too slow
+- Always use Atomics for synchronization
+- Check availability first
+
+**Key Takeaways:**
+1. SharedArrayBuffer enables zero-copy shared memory
+2. Always use Atomics for synchronization
+3. Requires Cross-Origin-Isolation headers` },
+      { id: 'async-iteration', title: 'Async Iteration', content: `**What is Async Iteration?**
+
+Async iteration enables looping over async data sources using \`for await...of\`.
+
+**Why Async Iteration Matters:**
+- Process paginated API responses
+- Read streams of data
+- Handle async data sources with clean syntax
+
+**Code Example:**
+\`\`\`javascript
+async function* fetchPages(url) {
+  let page = 1;
+  while (true) {
+    const response = await fetch(\`\${url}?page=\${page}\`);
+    const data = await response.json();
+    if (data.length === 0) break;
+    yield data;
+    page++;
+  }
+}
+
+for await (const page of fetchPages("https://api.example.com/items")) {
+  console.log("Page:", page);
+}
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+for (const page of fetchPages(url)) {} // Wrong!
+// Fix: Use for await...of
+for await (const page of fetchPages(url)) {}
+\`\`\`
+
+**Best Practices:**
+- Use \`for await...of\` for async iterables
+- Always handle errors
+- Don't block inside the loop
+
+**Key Takeaways:**
+1. \`for await...of\` loops over async iterables
+2. Async generators produce async values with \`yield\`
+3. Always handle errors` }
     ],
     quiz: [
       {
@@ -75,9 +382,127 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '30 min',
     objectives: ['Prevent XSS', 'Handle CSRF', 'Sanitize inputs'],
     topics: [
-      { id: 'xss', title: 'XSS Prevention', content: `**Practice:**\n\`\`\`javascript\n// Sanitize HTML\nfunction sanitizeHTML(str) {\n  const div = document.createElement("div");\n  div.textContent = str;\n  return div.innerHTML;\n}\n\n// Prevent XSS in innerHTML\nconst userInput = "<script>alert('XSS')</script>";\nelement.textContent = userInput; // Safe\nelement.innerHTML = userInput; // Dangerous!\n\`\`\`` },
-      { id: 'content-security', title: 'Content Security', content: `**Practice:**\n\`\`\`javascript\n// CSP Headers\nContent-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'\n\n// Avoid eval\neval(userInput); // Never!\nnew Function(userInput); // Never!\n\n// Use JSON for data\nconst data = JSON.parse(safeInput);\n\`\`\`` },
-      { id: 'input-validation', title: 'Input Validation', content: `**Practice:**\n\`\`\`javascript\n// Validate email\nfunction isValidEmail(email) {\n  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\n}\n\n// Validate URL\nfunction isValidURL(url) {\n  try {\n    new URL(url);\n    return true;\n  } catch {\n    return false;\n  }\n}\n\n// Sanitize input\nfunction sanitize(input) {\n  return input\n    .replace(/[<>]/g, "")\n    .replace(/\\/\\//g, "")\n    .trim();\n}\n\`\`\`` }
+      { id: 'xss', title: 'XSS Prevention', content: `**What is XSS?**
+
+Cross-Site Scripting (XSS) injects malicious scripts into web pages. Prevention requires sanitizing all user input.
+
+**Why XSS Prevention Matters:**
+- XSS is one of the most common vulnerabilities
+- Can steal cookies, tokens, and user data
+- Required by security standards (OWASP Top 10)
+
+**Code Example:**
+\`\`\`javascript
+function sanitizeHTML(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Safe — textContent
+element.textContent = userInput; // Displays as text
+
+// DANGEROUS — innerHTML
+element.innerHTML = userInput; // Executes scripts!
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+element.innerHTML = userComment; // XSS vulnerability!
+// Fix: Use textContent
+element.textContent = userComment;
+
+eval(getUserInput()); // Never!
+
+// Fix: Never use eval with user input
+\`\`\`
+
+**Best Practices:**
+- Use \`textContent\` for user text
+- Sanitize HTML with DOMPurify
+- Implement CSP headers
+- Never use \`eval()\` with user input
+
+**Key Takeaways:**
+1. Never use \`innerHTML\` with user input
+2. Sanitize HTML with DOMPurify
+3. Use \`textContent\` for plain text` },
+      { id: 'content-security', title: 'Content Security', content: `**What is Content Security?**
+
+Content security protects against malicious code execution via CSP headers, avoiding dangerous functions, and safe data parsing.
+
+**Code Example:**
+\`\`\`javascript
+// NEVER use eval with user input
+eval(userInput); // Dangerous!
+new Function(userInput); // Also dangerous!
+
+// Safe alternatives
+const data = JSON.parse(safeInput);
+
+// Safe DOM
+element.textContent = userInput;
+element.innerHTML = DOMPurify.sanitize(userInput);
+\`\`\`
+
+**Best Practices:**
+- Set strict CSP headers
+- Never use \`eval()\` or \`new Function()\` with user input
+- Use \`JSON.parse()\` for JSON data
+- Use SRI for external scripts
+
+**Key Takeaways:**
+1. Never use \`eval()\` with user input
+2. Implement CSP headers
+3. Use \`JSON.parse()\` for JSON data` },
+      { id: 'input-validation', title: 'Input Validation', content: `**What is Input Validation?**
+
+Input validation checks all data from users, APIs, or external sources before processing.
+
+**Why Input Validation Matters:**
+- Prevents injection attacks
+- Ensures data integrity
+- Provides clear error messages
+- Required for compliance
+
+**Code Example:**
+\`\`\`javascript
+function isValidEmail(email) {
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+\$/.test(email);
+}
+
+function isValidURL(url) {
+  try { new URL(url); return true; }
+  catch { return false; }
+}
+
+function sanitize(input) {
+  return input.replace(/[<>]/g, "").trim();
+}
+
+function validateUser(data) {
+  const errors = [];
+  if (!data.name || data.name.length < 2) {
+    errors.push("Name must be at least 2 characters");
+  }
+  if (!isValidEmail(data.email)) {
+    errors.push("Invalid email format");
+  }
+  if (errors.length) throw new ValidationError(errors.join(", "));
+  return data;
+}
+\`\`\`
+
+**Best Practices:**
+- Always validate on the server
+- Use allowlists over blocklists
+- Validate type, length, format, range
+- Provide clear error messages
+
+**Key Takeaways:**
+1. Never trust client-side validation alone
+2. Use allowlists over blocklists
+3. Validate type, length, format, range` }
     ],
     quiz: [
       {
@@ -109,9 +534,152 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '35 min',
     objectives: ['Write unit tests', 'Mock dependencies', 'Test async code'],
     topics: [
-      { id: 'unit-testing', title: 'Unit Testing', content: `**Practice:**\n\`\`\`javascript\n// test.js\nfunction add(a, b) {\n  return a + b;\n}\n\ndescribe("add", () => {\n  it("should add two numbers", () => {\n    expect(add(1, 2)).toBe(3);\n  });\n\n  it("should handle negative numbers", () => {\n    expect(add(-1, -2)).toBe(-3);\n  });\n});\n\`\`\`` },
-      { id: 'mocking', title: 'Mocking', content: `**Practice:**\n\`\`\`javascript\n// Mock function\nconst mockFn = jest.fn();\nmockFn.mockReturnValue(42);\nmockFn(); // 42\n\n// Mock module\njest.mock("./api.js");\nimport { fetchData } from "./api.js";\nfetchData.mockResolvedValue({ data: "test" });\n\n// Spy on method\nconst spy = jest.spyOn(object, "method");\nobject.method();\nexpect(spy).toHaveBeenCalled();\n\`\`\`` },
-      { id: 'async-testing', title: 'Async Testing', content: `**Practice:**\n\`\`\`javascript\n// Async test\nit("should fetch data", async () => {\n  const data = await fetchData();\n  expect(data).toBeDefined();\n});\n\n// Promise test\nit("should resolve", () => {\n  return expect(asyncFunction()).resolves.toBe(42);\n});\n\n// Mock async\njest.spyOn(api, "fetch").mockResolvedValue({ id: 1 });\n\`\`\`` }
+      { id: 'unit-testing', title: 'Unit Testing', content: `**What is Unit Testing?**
+
+Unit testing verifies individual functions in isolation. Each test checks one specific behavior.
+
+**Why Unit Testing Matters:**
+- Catch bugs early
+- Enable safe refactoring
+- Document expected behavior
+- Reduce debugging time
+
+**Code Example:**
+\`\`\`javascript
+describe("add", () => {
+  it("should add two positive numbers", () => {
+    expect(add(1, 2)).toBe(3);
+  });
+  it("should handle negative numbers", () => {
+    expect(add(-1, -2)).toBe(-3);
+  });
+  it("should throw on division by zero", () => {
+    expect(() => divide(10, 0)).toThrow("Cannot divide by zero");
+  });
+});
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Testing implementation details
+it("should use map", () => {
+  const spy = jest.spyOn(Array.prototype, "map");
+  processItems(items);
+  expect(spy).toHaveBeenCalled(); // Fragile!
+});
+// Fix: Test behavior, not implementation
+
+// Tests depending on each other
+it("should add item", () => { cart.add({name:"A",price:10}); });
+it("should calculate total", () => { expect(cart.getTotal()).toBe(10); });
+// Fix: Each test should be independent
+\`\`\`
+
+**Best Practices:**
+- Test behavior, not implementation
+- Keep tests independent
+- Test edge cases
+- Aim for confidence, not 100% coverage
+
+**Key Takeaways:**
+1. Test behavior, not implementation
+2. Each test should be independent
+3. Test edge cases — null, empty, boundary values` },
+      { id: 'mocking', title: 'Mocking', content: `**What is Mocking?**
+
+Mocking replaces real dependencies with controlled substitutes during testing.
+
+**Why Mocking Matters:**
+- Isolate code under test
+- Simulate error conditions
+- Verify function interactions
+- Speed up tests
+
+**Code Example:**
+\`\`\`javascript
+const mockFn = jest.fn();
+mockFn.mockReturnValue(42);
+mockFn(); // 42
+expect(mockFn).toHaveBeenCalled();
+
+jest.mock("./api.js");
+import { fetchData } from "./api.js";
+fetchData.mockResolvedValue({ data: "test" });
+
+const spy = jest.spyOn(object, "method");
+object.method();
+expect(spy).toHaveBeenCalledWith(expectedArgs);
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Not clearing mocks
+afterEach(() => { jest.clearAllMocks(); });
+
+// Over-mocking
+const mockFn = jest.fn().mockReturnValue(42);
+// If you mock everything, you test mocks, not code
+\`\`\`
+
+**Best Practices:**
+- Only mock external dependencies
+- Always clear mocks between tests
+- Verify interactions AND results
+- Mock at the boundary
+
+**Key Takeaways:**
+1. Mock only external dependencies
+2. Always clear mocks between tests
+3. Verify interactions and results` },
+      { id: 'async-testing', title: 'Async Testing', content: `**What is Async Testing?**
+
+Async testing verifies functions returning Promises or using async/await.
+
+**Code Example:**
+\`\`\`javascript
+it("should fetch data", async () => {
+  const data = await fetchData();
+  expect(data).toBeDefined();
+});
+
+it("should resolve", () => {
+  return expect(asyncFunction()).resolves.toBe(42);
+});
+
+it("should reject on error", async () => {
+  await expect(failingFunction()).rejects.toThrow("Error");
+});
+
+jest.spyOn(api, "fetch").mockResolvedValue({ id: 1 });
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+it("should work", () => {
+  fetchData().then(data => {
+    expect(data).toBeDefined();
+  });
+  // Test completes before Promise resolves!
+});
+// Fix: Return the Promise or use async/await
+
+it("should work", async () => {
+  const promise = fetchData();
+  expect(promise).toBeDefined(); // Tests Promise, not result!
+});
+// Fix: Always await
+\`\`\`
+
+**Best Practices:**
+- Use async/await for async tests
+- Return Promises or use async/await
+- Test both success and error paths
+- Set appropriate timeouts
+
+**Key Takeaways:**
+1. Always use async/await or return Promises
+2. Never forget to await
+3. Test both success and error paths` }
     ],
     quiz: [
       {
@@ -143,9 +711,109 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '40 min',
     objectives: ['Implement Singleton', 'Use Factory pattern', 'Apply Observer pattern'],
     topics: [
-      { id: 'singleton', title: 'Singleton', content: `**Practice:**\n\`\`\`javascript\nclass Database {\n  static #instance;\n\n  constructor() {\n    if (Database.#instance) {\n      return Database.#instance;\n    }\n    this.connection = this.connect();\n    Database.#instance = this;\n  }\n\n  connect() {\n    return "Connected";\n  }\n\n  static getInstance() {\n    if (!Database.#instance) {\n      Database.#instance = new Database();\n    }\n    return Database.#instance;\n  }\n}\n\nconst db1 = Database.getInstance();\nconst db2 = Database.getInstance();\nconsole.log(db1 === db2); // true\n\`\`\`` },
-      { id: 'factory', title: 'Factory Pattern', content: `**Practice:**\n\`\`\`javascript\nclass UserFactory {\n  static create(type, data) {\n    switch (type) {\n      case "admin":\n        return new Admin(data);\n      case "user":\n        return new User(data);\n      case "guest":\n        return new Guest(data);\n      default:\n        throw new Error(\`Unknown type: \${type}\`);\n    }\n  }\n}\n\nconst admin = UserFactory.create("admin", { name: "John" });\n\`\`\`` },
-      { id: 'observer', title: 'Observer Pattern', content: `**Practice:**\n\`\`\`javascript\nclass EventEmitter {\n  constructor() {\n    this.events = {};\n  }\n\n  on(event, callback) {\n    if (!this.events[event]) {\n      this.events[event] = [];\n    }\n    this.events[event].push(callback);\n  }\n\n  emit(event, ...args) {\n    const callbacks = this.events[event] || [];\n    callbacks.forEach(cb => cb(...args));\n  }\n\n  off(event, callback) {\n    this.events[event] = this.events[event]?.filter(cb => cb !== callback);\n  }\n}\n\nconst emitter = new EventEmitter();\nemitter.on("data", (data) => console.log(data));\nemitter.emit("data", "Hello"); // "Hello"\n\`\`\`` }
+      { id: 'singleton', title: 'Singleton', content: `**What is the Singleton Pattern?**
+
+Singleton ensures only one instance of a class exists with a global access point.
+
+**Code Example:**
+\`\`\`javascript
+class Database {
+  static #instance;
+  constructor() {
+    if (Database.#instance) return Database.#instance;
+    this.connection = this.connect();
+    Database.#instance = this;
+  }
+  connect() { return { host: "localhost", port: 5432 }; }
+  static getInstance() {
+    if (!Database.#instance) Database.#instance = new Database();
+    return Database.#instance;
+  }
+}
+const db1 = Database.getInstance();
+const db2 = Database.getInstance();
+console.log(db1 === db2); // true
+\`\`\`
+
+**Best Practices:**
+- Use for genuinely shared resources
+- Consider dependency injection for testability
+- Use private fields
+- Lazy initialization
+
+**Key Takeaways:**
+1. Singleton ensures one instance
+2. Use for genuinely shared resources
+3. Consider dependency injection as alternative` },
+      { id: 'factory', title: 'Factory Pattern', content: `**What is the Factory Pattern?**
+
+Factory creates objects of different types based on input parameters.
+
+**Code Example:**
+\`\`\`javascript
+class UserFactory {
+  static create(type, data) {
+    switch (type) {
+      case "admin": return new Admin(data);
+      case "user": return new User(data);
+      case "guest": return new Guest(data);
+      default: throw new Error(\`Unknown type: \${type}\`);
+    }
+  }
+}
+const admin = UserFactory.create("admin", { name: "John" });
+\`\`\`
+
+**Best Practices:**
+- Ensure consistent interface
+- Validate input
+- Document supported types
+
+**Key Takeaways:**
+1. Factory creates objects based on parameters
+2. Ensure consistent interface across types
+3. Validate input and provide clear errors` },
+      { id: 'observer', title: 'Observer Pattern', content: `**What is the Observer Pattern?**
+
+Observer defines a one-to-many dependency. When one object changes, all dependents are notified.
+
+**Why Observer Matters:**
+- Decouples subject from observers
+- Enables event-driven architecture
+- Foundation of RxJS, DOM events, pub/sub
+
+**Code Example:**
+\`\`\`javascript
+class EventEmitter {
+  constructor() { this.events = {}; }
+  on(event, callback) {
+    if (!this.events[event]) this.events[event] = [];
+    this.events[event].push(callback);
+    return () => this.off(event, callback);
+  }
+  emit(event, ...args) {
+    (this.events[event] || []).forEach(cb => cb(...args));
+  }
+  off(event, callback) {
+    this.events[event] = this.events[event]?.filter(cb => cb !== callback);
+  }
+}
+
+const emitter = new EventEmitter();
+const unsub = emitter.on("data", (d) => console.log(d));
+emitter.emit("data", "Hello"); // "Hello"
+unsub(); // Clean up
+\`\`\`
+
+**Best Practices:**
+- Always provide unsubscribe
+- Copy observers before iterating
+- Handle errors in individual observers
+
+**Key Takeaways:**
+1. Observer decouples subjects from observers
+2. Always provide unsubscribe mechanisms
+3. Copy observer list before iterating` }
     ],
     quiz: [
       {
@@ -177,9 +845,144 @@ export const JS_ADVANCED_LESSONS: Lesson[] = [
     level: 'advanced', duration: '45 min',
     objectives: ['Answer common questions', 'Demonstrate deep knowledge', 'Solve coding challenges'],
     topics: [
-      { id: 'hoisting', title: 'Hoisting', content: `**Practice:**\n\`\`\`javascript\n// Variables\nconsole.log(x); // undefined (var is hoisted)\nvar x = 5;\n\nconsole.log(y); // ReferenceError (let/const not hoisted)\nlet y = 5;\n\n// Functions\nfoo(); // Works (function declaration hoisted)\nfunction foo() {\n  console.log("foo");\n}\n\nbar(); // ReferenceError (function expression not hoisted)\nconst bar = () => console.log("bar");\n\`\`\`` },
-      { id: 'this', title: 'This Keyword', content: `**Practice:**\n\`\`\`javascript\n// Global context\nconsole.log(this); // window (browser) or global (Node)\n\n// Function context\nfunction foo() {\n  console.log(this); // window (non-strict) or undefined (strict)\n}\n\n// Object method\nconst obj = {\n  name: "John",\n  greet() {\n    console.log(this.name); // "John"\n  }\n};\n\n// Arrow function (inherits this)\nconst obj = {\n  name: "John",\n  greet: () => {\n    console.log(this.name); // undefined (inherits outer this)\n  }\n};\n\n// call/apply/bind\nfunction greet(greeting) {\n  console.log(\`\${greeting}, \${this.name}\`);\n}\n\ngreet.call({ name: "John" }, "Hello");\ngreet.apply({ name: "John" }, ["Hello"]);\nconst boundGreet = greet.bind({ name: "John" });\nboundGreet("Hello");\n\`\`\`` },
-      { id: 'closures-interview', title: 'Closures', content: `**Practice:**\n\`\`\`javascript\n// What is the output?\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 100);\n}\n// Output: 3, 3, 3\n\n// Fix with let\nfor (let i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 100);\n}\n// Output: 0, 1, 2\n\n// Fix with IIFE\nfor (var i = 0; i < 3; i++) {\n  ((j) => setTimeout(() => console.log(j), 100))(i);\n}\n// Output: 0, 1, 2\n\`\`\`` }
+      { id: 'hoisting', title: 'Hoisting', content: `**What is Hoisting?**
+
+Hoisting moves declarations to the top of their scope during compilation. Variable/function declarations are hoisted; assignments are not.
+
+**Code Example:**
+\`\`\`javascript
+foo(); // Works — declaration hoisted
+function foo() { console.log("foo"); }
+
+console.log(x); // undefined (var hoisted)
+var x = 5;
+
+console.log(y); // ReferenceError (let/const not hoisted)
+let y = 5;
+
+bar(); // ReferenceError (expression not hoisted)
+const bar = () => console.log("bar");
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+for (var i = 0; i < 3; i++) {}
+console.log(i); // 3 — var leaked
+// Fix: Use let
+for (let i = 0; i < 3; i++) {}
+console.log(i); // ReferenceError
+\`\`\`
+
+**Best Practices:**
+- Declare variables at the top of their scope
+- Use \`const\` and \`let\` — never \`var\`
+- Understand the temporal dead zone
+
+**Key Takeaways:**
+1. Function declarations are fully hoisted
+2. var is hoisted with undefined; let/const are in TDZ
+3. Expressions and classes are NOT hoisted` },
+      { id: 'this', title: 'This Keyword', content: `**What is \`this\`?**
+
+The \`this\` keyword refers to the execution context. Its value depends on how the function is called.
+
+**Code Example:**
+\`\`\`javascript
+// Global
+console.log(this); // window
+
+// Object method
+const obj = {
+  name: "John",
+  greet() { console.log(this.name); } // "John"
+};
+
+// Arrow function — inherits 'this'
+const obj2 = {
+  name: "John",
+  greet: () => { console.log(this.name); } // undefined
+};
+
+// Explicit binding
+function greet(greeting) {
+  console.log(\`\${greeting}, \${this.name}\`);
+}
+greet.call({ name: "John" }, "Hello");
+greet.apply({ name: "John" }, ["Hello"]);
+const bound = greet.bind({ name: "John" });
+bound("Hello");
+\`\`\`
+
+**Common Mistakes:**
+\`\`\`javascript
+// Arrow functions as methods
+const obj = {
+  name: "John",
+  greet: () => { console.log(this.name); } // undefined!
+};
+// Fix: Use regular method syntax
+
+// Losing 'this' in callbacks
+setTimeout(function() { console.log(this.name); }, 100);
+// Fix: Use arrow function
+\`\`\`
+
+**Best Practices:**
+- Use arrow functions for callbacks needing enclosing \`this\`
+- Use regular methods for object methods
+- Use \`bind()\` for method callbacks
+
+**Key Takeaways:**
+1. \`this\` depends on how a function is called
+2. Arrow functions inherit \`this\` from enclosing scope
+3. Use \`call\`, \`apply\`, \`bind\` for explicit binding` },
+      { id: 'closures-interview', title: 'Closures', content: `**Closures (Interview Perspective)**
+
+Closures are a frequent interview topic combining scope, functions, and memory.
+
+**Classic Question:**
+\`\`\`javascript
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+// Output: 3, 3, 3
+
+// Solution 1: Use let
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+// Output: 0, 1, 2
+
+// Solution 2: Use IIFE
+for (var i = 0; i < 3; i++) {
+  ((j) => setTimeout(() => console.log(j), 100))(i);
+}
+// Output: 0, 1, 2
+
+// Solution 3: Factory function
+const createLogger = (i) => () => console.log(i);
+for (var i = 0; i < 3; i++) {
+  setTimeout(createLogger(i), 100);
+}
+// Output: 0, 1, 2
+\`\`\`
+
+**Real-World:**
+\`\`\`javascript
+function createBankAccount(initialBalance) {
+  let balance = initialBalance;
+  return {
+    deposit(amount) { balance += amount; },
+    withdraw(amount) { balance -= amount; },
+    getBalance() { return balance; }
+  };
+}
+\`\`\`
+
+**Key Takeaways:**
+1. The loop closure problem is caused by \`var\` sharing one binding
+2. Solutions: \`let\`, IIFE, factory function
+3. Closures enable private state` }
     ],
     quiz: [
       {
