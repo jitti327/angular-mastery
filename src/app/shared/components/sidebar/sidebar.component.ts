@@ -119,6 +119,22 @@ import { MobileMenuService } from '../../../core/services/mobile-menu.service';
         </div>
 
         <div class="nav-section">
+          <span class="nav-label">LEARNING</span>
+          <a routerLink="/learning-paths" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🗺️</span>
+            @if (!isCollapsed()) { <span>Learning Paths</span> }
+          </a>
+          <a routerLink="/challenges" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">💻</span>
+            @if (!isCollapsed()) { <span>Coding Challenges</span> }
+          </a>
+          <a routerLink="/review" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+            <span class="nav-emoji">🔄</span>
+            @if (!isCollapsed()) { <span>Spaced Review</span> }
+          </a>
+        </div>
+
+        <div class="nav-section">
           <span class="nav-label">RESOURCES</span>
           <a routerLink="/knowledge-base" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>

@@ -21,7 +21,11 @@ export class ProgressService {
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        try {
+          return JSON.parse(saved);
+        } catch {
+          localStorage.removeItem(this.STORAGE_KEY);
+        }
       }
     }
     return {
@@ -88,7 +92,11 @@ export class ProgressService {
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem(this.BOOKMARKS_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        try {
+          return JSON.parse(saved);
+        } catch {
+          localStorage.removeItem(this.BOOKMARKS_KEY);
+        }
       }
     }
     return [];

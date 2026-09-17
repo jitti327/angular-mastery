@@ -206,6 +206,174 @@ import { trigger, transition, style, animate, query, stagger, state } from '@ang
               <span class="category-arrow">→</span>
             </div>
           </a>
+          <a routerLink="/lessons/react" class="category-card react">
+            <div class="category-icon-wrap">
+              <span class="category-icon">⚛️</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>React</h3>
+            <p>Master React from hooks to server components</p>
+            <div class="category-footer">
+              <span class="category-count">{{ reactCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/vue" class="category-card vue">
+            <div class="category-icon-wrap">
+              <span class="category-icon">💚</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Vue</h3>
+            <p>Master Vue from composition API to Nuxt</p>
+            <div class="category-footer">
+              <span class="category-count">{{ vueCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/html-css" class="category-card html-css">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🎨</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>HTML & CSS</h3>
+            <p>Master semantic HTML, Flexbox, Grid, and modern CSS</p>
+            <div class="category-footer">
+              <span class="category-count">{{ htmlCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/system-design" class="category-card system-design">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🏗️</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>System Design</h3>
+            <p>Learn frontend system design and architecture</p>
+            <div class="category-footer">
+              <span class="category-count">{{ sysdesignCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/database" class="category-card database">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🗄️</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Databases</h3>
+            <p>Master SQL, MySQL, PostgreSQL, and MongoDB</p>
+            <div class="category-footer">
+              <span class="category-count">{{ dbCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/networking" class="category-card networking">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🌐</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Networking</h3>
+            <p>Master HTTP, REST, GraphQL, and WebSockets</p>
+            <div class="category-footer">
+              <span class="category-count">{{ netCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/browser" class="category-card browser">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🌍</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Browser Internals</h3>
+            <p>Understand rendering, event loop, and Web APIs</p>
+            <div class="category-footer">
+              <span class="category-count">{{ browserCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/performance" class="category-card performance">
+            <div class="category-icon-wrap">
+              <span class="category-icon">⚡</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Performance</h3>
+            <p>Optimize apps for Core Web Vitals and speed</p>
+            <div class="category-footer">
+              <span class="category-count">{{ perfCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/tooling" class="category-card tooling">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🔧</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Tooling</h3>
+            <p>Master Vite, Webpack, ESLint, and CI/CD</p>
+            <div class="category-footer">
+              <span class="category-count">{{ toolCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/testing" class="category-card testing">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🧪</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Testing</h3>
+            <p>Master Jest, Playwright, TDD, and test architecture</p>
+            <div class="category-footer">
+              <span class="category-count">{{ testCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/design-systems" class="category-card design-systems">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🎯</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Design Systems</h3>
+            <p>Build tokens, components, and documentation</p>
+            <div class="category-footer">
+              <span class="category-count">{{ dsysCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/dsa-frontend" class="category-card dsa">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🧮</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>DSA for Frontend</h3>
+            <p>Data structures and algorithms for interviews</p>
+            <div class="category-footer">
+              <span class="category-count">{{ dsaCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/soft-skills" class="category-card soft-skills">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🤝</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Soft Skills</h3>
+            <p>Communication, mentoring, and leadership</p>
+            <div class="category-footer">
+              <span class="category-count">{{ softCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
+          <a routerLink="/lessons/security" class="category-card security">
+            <div class="category-icon-wrap">
+              <span class="category-icon">🔒</span>
+              <div class="icon-ring"></div>
+            </div>
+            <h3>Security</h3>
+            <p>XSS, CSRF, CSP, OWASP, and auth patterns</p>
+            <div class="category-footer">
+              <span class="category-count">{{ secCount() }} lessons</span>
+              <span class="category-arrow">→</span>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -213,48 +381,48 @@ import { trigger, transition, style, animate, query, stagger, state } from '@ang
       <section class="features" @featureStagger appScrollReveal="fadeInUp">
         <h2>What You'll Learn</h2>
         <div class="features-grid">
-          <div class="feature-card">
+          <a routerLink="/learning-paths" class="feature-card">
             <div class="feature-icon-wrap">
-              <span class="feature-icon">📦</span>
+              <span class="feature-icon">🗺️</span>
             </div>
-            <h3>Components & Templates</h3>
-            <p>Master Angular's building blocks with live examples</p>
-          </div>
-          <div class="feature-card">
+            <h3>Learning Paths</h3>
+            <p>Guided curricula from beginner to senior engineer</p>
+          </a>
+          <a routerLink="/challenges" class="feature-card">
+            <div class="feature-icon-wrap">
+              <span class="feature-icon">💻</span>
+            </div>
+            <h3>Coding Challenges</h3>
+            <p>Hands-on problems with real test cases</p>
+          </a>
+          <a routerLink="/review" class="feature-card">
             <div class="feature-icon-wrap">
               <span class="feature-icon">🔄</span>
             </div>
-            <h3>Reactive Programming</h3>
-            <p>Learn Signals, RxJS, and Zoneless architecture</p>
-          </div>
-          <div class="feature-card">
+            <h3>Spaced Repetition</h3>
+            <p>Review lessons at optimal intervals for retention</p>
+          </a>
+          <a routerLink="/knowledge-base" class="feature-card">
             <div class="feature-icon-wrap">
-              <span class="feature-icon">📝</span>
+              <span class="feature-icon">🔍</span>
             </div>
-            <h3>Forms & Validation</h3>
-            <p>Template-driven, Reactive, and Signal Forms</p>
-          </div>
-          <div class="feature-card">
+            <h3>Knowledge Base</h3>
+            <p>Searchable index across all 457 lessons</p>
+          </a>
+          <a routerLink="/visuals" class="feature-card">
             <div class="feature-icon-wrap">
-              <span class="feature-icon">🌐</span>
+              <span class="feature-icon">📊</span>
             </div>
-            <h3>HTTP & Data</h3>
-            <p>HttpClient, Resource API, and Observables</p>
-          </div>
-          <div class="feature-card">
+            <h3>Visual Learning</h3>
+            <p>Diagrams, animations, and interactive visuals</p>
+          </a>
+          <a routerLink="/practice/todo" class="feature-card">
             <div class="feature-icon-wrap">
-              <span class="feature-icon">🧭</span>
+              <span class="feature-icon">🛠️</span>
             </div>
-            <h3>Routing</h3>
-            <p>Navigation, guards, and lazy loading</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrap">
-              <span class="feature-icon">⚡</span>
-            </div>
-            <h3>Performance</h3>
-            <p>Optimization strategies and best practices</p>
-          </div>
+            <h3>Practice Projects</h3>
+            <p>Build real apps: Todo, Weather, E-commerce, Chat</p>
+          </a>
         </div>
       </section>
 
@@ -562,7 +730,7 @@ import { trigger, transition, style, animate, query, stagger, state } from '@ang
       0%, 100% { transform: translateY(0) rotate(0deg); }
       50% { transform: translateY(-8px) rotate(0.5deg); }
     }
-    .code-line { color: #d4d4d4; }
+    .code-line { color: #d4d4d4; white-space: pre; }
     .kw { color: #569cd6; }
     .var { color: #4ec9b0; }
     .fn { color: #dcdcaa; }
@@ -619,6 +787,34 @@ import { trigger, transition, style, animate, query, stagger, state } from '@ang
     .category-card.javascript:hover::before { background: linear-gradient(90deg, #f7df1e, #ffd700); }
     .category-card.typescript:hover { border-color: #3178c6; }
     .category-card.typescript:hover::before { background: linear-gradient(90deg, #3178c6, #60a5fa); }
+    .category-card.react:hover { border-color: #61dafb; }
+    .category-card.react:hover::before { background: linear-gradient(90deg, #61dafb, #087ea4); }
+    .category-card.vue:hover { border-color: #42b883; }
+    .category-card.vue:hover::before { background: linear-gradient(90deg, #42b883, #64d2ff); }
+    .category-card.html-css:hover { border-color: #e34c26; }
+    .category-card.html-css:hover::before { background: linear-gradient(90deg, #e34c26, #ff6b6b); }
+    .category-card.system-design:hover { border-color: #8b5cf6; }
+    .category-card.system-design:hover::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .category-card.database:hover { border-color: #336791; }
+    .category-card.database:hover::before { background: linear-gradient(90deg, #336791, #60a5fa); }
+    .category-card.networking:hover { border-color: #06b6d4; }
+    .category-card.networking:hover::before { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+    .category-card.browser:hover { border-color: #ff6b35; }
+    .category-card.browser:hover::before { background: linear-gradient(90deg, #ff6b35, #ffa726); }
+    .category-card.performance:hover { border-color: #f59e0b; }
+    .category-card.performance:hover::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .category-card.tooling:hover { border-color: #6b7280; }
+    .category-card.tooling:hover::before { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+    .category-card.testing:hover { border-color: #10b981; }
+    .category-card.testing:hover::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .category-card.design-systems:hover { border-color: #ec4899; }
+    .category-card.design-systems:hover::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+    .category-card.dsa:hover { border-color: #f97316; }
+    .category-card.dsa:hover::before { background: linear-gradient(90deg, #f97316, #fb923c); }
+    .category-card.soft-skills:hover { border-color: #8b5cf6; }
+    .category-card.soft-skills:hover::before { background: linear-gradient(90deg, #8b5cf6, #c084fc); }
+    .category-card.security:hover { border-color: #ef4444; }
+    .category-card.security:hover::before { background: linear-gradient(90deg, #ef4444, #f87171); }
     .category-icon-wrap {
       position: relative;
       margin-bottom: 20px;
@@ -876,4 +1072,18 @@ export class HomeComponent {
   angularCount = () => this.lessonService.getLessonCountByCategory('angular');
   jsCount = () => this.lessonService.getLessonCountByCategory('javascript');
   tsCount = () => this.lessonService.getLessonCountByCategory('typescript');
+  reactCount = () => this.lessonService.getLessonCountByCategory('react');
+  vueCount = () => this.lessonService.getLessonCountByCategory('vue');
+  htmlCount = () => this.lessonService.getLessonCountByCategory('html-css');
+  sysdesignCount = () => this.lessonService.getLessonCountByCategory('system-design');
+  dbCount = () => this.lessonService.getLessonCountByCategory('database');
+  netCount = () => this.lessonService.getLessonCountByCategory('networking');
+  browserCount = () => this.lessonService.getLessonCountByCategory('browser');
+  perfCount = () => this.lessonService.getLessonCountByCategory('performance');
+  toolCount = () => this.lessonService.getLessonCountByCategory('tooling');
+  testCount = () => this.lessonService.getLessonCountByCategory('testing');
+  dsysCount = () => this.lessonService.getLessonCountByCategory('design-systems');
+  dsaCount = () => this.lessonService.getLessonCountByCategory('dsa-frontend');
+  softCount = () => this.lessonService.getLessonCountByCategory('soft-skills');
+  secCount = () => this.lessonService.getLessonCountByCategory('security');
 }

@@ -7,6 +7,7 @@ import { QuizComponent } from '../../../shared/components/quiz/quiz.component';
 import { DiagramViewerComponent } from '../../../shared/components/diagram-viewer/diagram-viewer.component';
 import { CodePlaygroundComponent } from '../../../shared/components/code-playground/code-playground.component';
 import { TerminalComponent } from '../../../shared/components/terminal/terminal.component';
+import { CommunityCommentsComponent } from '../../../shared/components/community-comments/community-comments.component';
 import { map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import Prism from 'prismjs';
@@ -17,7 +18,7 @@ import 'prismjs/components/prism-markup';
 @Component({
   selector: 'app-lesson-page',
   standalone: true,
-  imports: [RouterLink, CodeViewerComponent, QuizComponent, DiagramViewerComponent, CodePlaygroundComponent, TerminalComponent],
+  imports: [RouterLink, CodeViewerComponent, QuizComponent, DiagramViewerComponent, CodePlaygroundComponent, TerminalComponent, CommunityCommentsComponent],
   template: `
     @if (lesson(); as lesson) {
       <div class="lesson-layout">
@@ -143,6 +144,8 @@ import 'prismjs/components/prism-markup';
             <app-terminal />
           </div>
 
+          <app-community-comments [lessonId]="lesson.id" />
+
           <footer class="lesson-footer">
             @if (prevLesson(); as prev) {
               <a [routerLink]="['/lesson', prev.id]" class="nav-btn prev">
@@ -180,6 +183,13 @@ import 'prismjs/components/prism-markup';
             }
           </footer>
         </div>
+      </div>
+    } @else if (loaded()) {
+      <div class="lesson-not-found">
+        <div class="not-found-icon">🔍</div>
+        <h2>Lesson Not Found</h2>
+        <p>The lesson you're looking for doesn't exist or may have been moved.</p>
+        <a routerLink="/lessons" class="back-btn">← Browse All Lessons</a>
       </div>
     } @else {
       <div class="lesson-skeleton">
@@ -629,6 +639,40 @@ import 'prismjs/components/prism-markup';
       gap: 16px;
     }
 
+    .lesson-not-found {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .not-found-icon { font-size: 64px; margin-bottom: 24px; }
+    .lesson-not-found h2 {
+      font-size: 28px;
+      color: var(--text-primary);
+      margin: 0 0 12px;
+    }
+    .lesson-not-found p {
+      color: var(--text-secondary);
+      margin: 0 0 24px;
+      font-size: 16px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--primary-dark); }
+
     @media (max-width: 1200px) {
       .lesson-sidebar { display: none; }
     }
@@ -648,12 +692,15 @@ export class LessonPageComponent implements AfterViewChecked {
 
   activeSection = signal('');
   readingProgress = signal(0);
+  loaded = signal(false);
 
   lesson = toSignal(
     this.route.paramMap.pipe(
       map(params => {
         const id = Number(params.get('id'));
-        return this.lessonService.getLesson(id);
+        const l = this.lessonService.getLesson(id);
+        setTimeout(() => this.loaded.set(true), 300);
+        return l;
       })
     )
   );

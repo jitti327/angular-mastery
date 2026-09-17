@@ -28,6 +28,7 @@ interface PlaygroundTemplate {
           }
         </div>
         <div class="playground-actions">
+          <button class="stackblitz-btn" (click)="openStackBlitz()" title="Open in StackBlitz for real execution">⚡ StackBlitz</button>
           <button class="run-btn" (click)="runCode()">&#9654; Run</button>
           <button class="reset-btn" (click)="resetCode()">&#8634; Reset</button>
         </div>
@@ -157,6 +158,18 @@ interface PlaygroundTemplate {
     .run-btn:hover { background: #388e3c; }
     .reset-btn { background: #555; color: #fff; }
     .reset-btn:hover { background: #666; }
+    .stackblitz-btn {
+      background: #1389fd;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .stackblitz-btn:hover { background: #0d7ae6; }
     .playground-body { min-height: 400px; }
     .split-view { display: flex; height: 400px; }
     .editor-pane, .output-pane, .preview-pane {
@@ -321,6 +334,91 @@ export class CodePlaygroundComponent {
         'data:text/html;charset=utf-8,' + encodeURIComponent(html)
       ));
     }
+  }
+
+  openStackBlitz(): void {
+    const lang = this.activeTab();
+    const code = this.code();
+    const css = this.cssCode();
+
+    let htmlContent = '';
+    let jsContent = '';
+    let title = 'Angular Mastery Playground';
+
+    if (lang === 'html-css') {
+      htmlContent = code;
+      title = 'HTML/CSS Playground';
+    } else if (lang === 'react') {
+      htmlContent = `<!DOCTYPE html>
+<html><head><title>React</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+<style>${css}</style></head>
+<body><div id="root"></div>
+<script type="text/babel">${code}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+<\/script></body></html>`;
+      title = 'React Playground';
+    } else if (lang === 'vue') {
+      htmlContent = `<!DOCTYPE html>
+<html><head><title>Vue</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"><\/script>
+<style>${css}</style></head>
+<body><div id="app">{{ message }}</div>
+<script>
+const { createApp } = Vue;
+${code}
+createApp({ data: () => ({ message: 'Hello Vue!' }) }).mount('#app');
+<\/script></body></html>`;
+      title = 'Vue Playground';
+    } else if (lang === 'svelte') {
+      htmlContent = `<!DOCTYPE html>
+<html><head><title>Svelte</title><style>${css}</style></head>
+<body><div id="app"></div>
+<script>
+// Svelte compiles away - this is a simplified version
+${code}
+<\/script></body></html>`;
+      title = 'Svelte Playground';
+    } else if (lang === 'typescript') {
+      jsContent = code.replace(/interface\s+\w+\s*\{[^}]*\}/g, '')
+        .replace(/:\s*(string|number|boolean|any|void|never|unknown|\w+)\[\]/g, '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/as\s+\w+/g, '');
+      title = 'TypeScript Playground';
+    } else {
+      jsContent = code;
+      title = 'JavaScript Playground';
+    }
+
+    const form = document.createElement('form');
+    form.action = 'https://stackblitz.com/run';
+    form.method = 'POST';
+    form.target = '_blank';
+
+    const addField = (name: string, value: string) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+
+    addField('project[title]', title);
+    addField('project[description]', 'Angular Mastery Interactive Playground');
+
+    if (lang === 'html-css' || lang === 'react' || lang === 'vue' || lang === 'svelte') {
+      addField('project[files][index.html]', htmlContent);
+      if (css) addField('project[files][style.css]', css);
+    } else {
+      addField('project[files][index.js]', jsContent);
+      addField('project[template]', 'node');
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
   }
 
   runCode(): void {

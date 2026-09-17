@@ -90,3 +90,83 @@ export interface VersionFeature {
   status: 'stable' | 'deprecated' | 'experimental' | 'removed';
   description: string;
 }
+
+export interface CodingChallenge {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  duration: string;
+  starterCode: string;
+  testCases: TestCase[];
+  hints: string[];
+  solution: string;
+  concepts: string[];
+}
+
+export interface TestCase {
+  id: number;
+  input: string;
+  expected: string;
+  description: string;
+}
+
+export interface ChallengeResult {
+  challengeId: number;
+  passed: boolean;
+  passedTests: number;
+  totalTests: number;
+  completedAt: Date;
+}
+
+export interface LearningPath {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'mixed';
+  estimatedWeeks: number;
+  milestones: Milestone[];
+  lessonIds: number[];
+}
+
+export interface Milestone {
+  id: number;
+  title: string;
+  description: string;
+  lessonIds: number[];
+  challengeIds: number[];
+}
+
+export interface Certificate {
+  id: string;
+  pathId: string;
+  pathTitle: string;
+  completedAt: Date;
+  totalLessons: number;
+  totalChallenges: number;
+  averageScore: number;
+  learnerName: string;
+}
+
+export interface Comment {
+  id: string;
+  lessonId: number;
+  author: string;
+  content: string;
+  createdAt: Date;
+  likes: number;
+  likedBy: string[];
+  replies: Comment[];
+}
+
+export interface ReviewCard {
+  lessonId: number;
+  nextReview: Date;
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+  lastReviewed: Date;
+}
